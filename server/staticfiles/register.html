@@ -1,0 +1,36 @@
+
+<html>
+	<head><title>Register</title></head>
+	<body>
+		<form action="/register" method="post">
+			<label><b>Username</b></label>
+			<input type="text" name="user" placeholder="Enter username" required>
+			<label><b>Password</b></label>
+			<input type="password" id="p1" name="passw" placeholder="Enter Password" onkeyup="passwordCheck();" required>
+			<input type="password" id="p2" name="passw2" placeholder="Re-Enter the password" onkeyup="passwordCheck();" required>
+			<label><b>Email</b></label>
+			<input type="email" name="email" placeholder="Email address" required>
+			<input type="submit" id="btn" value="Register">
+		</form>
+		<center><h5 id="msg"></h5></center>
+	</body>
+
+	<script type="text/javascript">
+		function passwordCheck()
+		{
+			var passw = document.getElementById('p1');
+			var passw1 = document.getElementById('p2');
+			var button = document.getElementById('btn');
+			var msg = document.getElementById("msg");
+			if (passw.value != passw1.value){
+				msg.innerHTML = "passwords doesn't match";
+				button.disabled = true ;
+			}else{
+				msg.innerHTML = "password match";
+				button.disabled	= false ;
+			}
+		}
+	</script>
+
+
+</html> 

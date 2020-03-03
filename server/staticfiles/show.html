@@ -1,0 +1,53 @@
+
+
+
+<html>
+	<head><title>Show Creds</title></head>
+	<body>
+		<div class="form">
+			<form action="/show" method="post">
+				<label>Filter by Category</label>
+				<input type="search" placeholder="Search by Category ..." name="category">
+				<input type="submit" name="Search">
+			</form>
+		</div>
+		<div class="table">
+			<table>
+				<tr>
+					<th>ID</th>
+					<th>Username</th>
+					<th>Password</th>
+					<th>Category</th>
+				</tr>
+				
+				{{ range . }}
+				<tr>
+					<td>{{ .Id }}</td>  <td>{{ .User }}</td> <td id="pwd">{{ .Password }}</td><td>{{ .Category }}</td>
+				</tr>
+				{{ end }}
+
+			</table>
+		</div>
+		
+	</body>
+
+
+	<style type="text/css">
+		th,td{
+			border: 1px solid black;
+		}
+		.table, .form {
+
+			padding-left: 36%;
+		}
+		.table{
+			padding-top: 10%;
+		}
+		th{
+			color: purple;
+		}
+	</style>
+
+	
+
+</html>
