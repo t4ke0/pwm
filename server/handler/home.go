@@ -1,8 +1,8 @@
 package handler
 
 import (
+	"../dialer"
 	"fmt"
-	"github.com/TaKeO90/pwm/server/dialer"
 	"net/http"
 )
 
