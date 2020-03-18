@@ -75,7 +75,7 @@ func ServeRegister(w http.ResponseWriter, r *http.Request) {
 		password := strings.Join(f["passw"], "")
 		email := strings.Join(f["email"], "")
 
-		if ok := identityprovider.GetRegister(r, user, password, email); ok == 1 {
+		if ok := identityprovider.GetRegister(r, user, password, email); ok {
 			http.Redirect(w, r, "/login", http.StatusFound)
 		} else {
 			http.Redirect(w, r, "/register", http.StatusFound)
@@ -94,7 +94,7 @@ func ServeLogin(w http.ResponseWriter, r *http.Request) {
 	if f := HandlePost(r); len(f) != 0 {
 		user := strings.Join(f["user"], "")
 		password := strings.Join(f["passw"], "")
-		if ok := identityprovider.GetLoggedin(w, r, user, password); ok == 1 {
+		if ok := identityprovider.GetLoggedin(w, r, user, password); ok {
 			http.Redirect(w, r, "/", http.StatusFound)
 		} else {
 			fmt.Fprintf(w, "Wrong username or password!")
