@@ -116,15 +116,20 @@ func HandleLogout(w http.ResponseWriter, r *http.Request) {
 
 func ServeShow(w http.ResponseWriter, r *http.Request) {
 	var l pwshow.UserList
-	HandleGet(w, r, "show.html", u)
-	user := authentication.GetUsername(r)
-	if f := HandlePost(r); len(f) != 0 {
-		category := strings.Join(f["category"], "")
-		l = pwshow.ShowCreds(user, category)
-		if len(l) != 0 {
-			u.CredList = l
-			http.Redirect(w, r, "/show", http.StatusFound)
+	if cookie := authentication.CheckCookie(r); cookie {
+		HandleGet(w, r, "show.html", u)
+		user := authentication.GetUsername(r)
+		u.Username = user
+		if f := HandlePost(r); len(f) != 0 {
+			category := strings.Join(f["category"], "")
+			l = pwshow.ShowCreds(user, category)
+			if len(l) != 0 {
+				u.CredList = l
+				http.Redirect(w, r, "/show", http.StatusFound)
+			}
 		}
+	} else {
+		fmt.Fprintf(w, "You are not Loggeding")
 	}
 }
 
@@ -151,9 +156,13 @@ func ServeAdd(w http.ResponseWriter, r *http.Request) {
 				http.Redirect(w, r, "/add", http.StatusFound)
 			}
 		}
+	} else {
+		fmt.Fprintf(w, "You are Not Loggeding")
 	}
 }
 
 func ServeDelete(w http.ResponseWriter, r *http.Request) {
 	HandleGet(w, r, "delete.html")
 }
+
+//TODO CREATE A FUNC FOR HANDLING IF THE USER IS NOT LOGGED IN AND HE WANT ACCESS ONE OF THE SERVICES
