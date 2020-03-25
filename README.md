@@ -8,11 +8,11 @@
 - [ ] fix error coverage
 - [ ] complete roadmap
 
-## Quick Setup and Run 
+## Trying the Code [developping mode]
 
 ```sh
-
+git checkout develop
 go get 
-go run main.go
+go run launcher
 
 ```
