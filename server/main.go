@@ -3,9 +3,10 @@ package main
 import (
 	"./handler"
 	"fmt"
-	"github.com/go-chi/chi"
 	"log"
 	"net/http"
+
+	"github.com/go-chi/chi"
 )
 
 func main() {
@@ -17,9 +18,11 @@ func main() {
 	r.Get("/login", handler.LoginHandle)
 	r.Post("/login", handler.LoginHandle)
 	r.Get("/show", handler.ShowStuffHandle)
+	r.Post("/show", handler.ShowStuffHandle)
 	r.Get("/update", handler.UpdateStuffHandle)
 	r.Post("/update", handler.UpdateStuffHandle)
 	r.Get("/add", handler.AddStuffHandle)
+	r.Post("/add", handler.AddStuffHandle)
 	r.Get("/delete", handler.DeleteStuffHandle)
 	r.Post("/delete", handler.DeleteStuffHandle)
 	r.Get("/logout", handler.LogoutHandle)

@@ -19,12 +19,11 @@
 					<th>Password</th>
 					<th>Category</th>
 				</tr>
-				
-				{{ range . }}
-				<tr>
-					<td>{{ .Id }}</td>  <td>{{ .User }}</td> <td id="pwd">{{ .Password }}</td><td>{{ .Category }}</td>
-				</tr>
-				{{ end }}
+          {{ range .CredList }}
+          <tr>
+            <td>{{ .Id }}</td>  <td>{{ .Username }}</td> <td id="pwd">{{ .Password }}</td><td>{{ .Category }}</td>
+          </tr>
+          {{ end }}
 
 			</table>
 		</div>

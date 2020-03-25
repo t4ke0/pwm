@@ -1,9 +1,10 @@
 package handler
 
 import (
-	"../dialer"
 	"fmt"
 	"net/http"
+
+	"../dialer"
 )
 
 func HomeHandle(w http.ResponseWriter, r *http.Request) {

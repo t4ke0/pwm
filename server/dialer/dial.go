@@ -3,6 +3,10 @@ package dialer
 import (
 	"../../authentication"
 	"../../identityprovider"
+	//	"../../services/pwdelete"
+	"../../services/pwsaver"
+	"../../services/pwshow"
+	//	"../../services/pwupdate"
 	"fmt"
 	"html/template"
 	"log"
@@ -16,6 +20,7 @@ type User struct {
 	Username string
 	Ok       bool
 	Cookie   bool
+	CredList pwshow.UserList
 }
 
 type usr User
@@ -28,10 +33,9 @@ func HandleGet(w http.ResponseWriter, r *http.Request, tempt string, args ...usr
 		t, err := template.ParseFiles(Static + tempt)
 		CheckError(err)
 		if len(args) < 1 {
-			t.Execute(w, nil)
+			fmt.Println(t.Execute(w, nil)) //To remove fmt for debugging only
 		} else {
-			t.Execute(w, args[0])
-
+			fmt.Println(t.Execute(w, args[0]))
 		}
 	}
 }
@@ -81,7 +85,6 @@ func ServeRegister(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/register", http.StatusFound)
 		}
 	}
-
 }
 
 func ServeLogin(w http.ResponseWriter, r *http.Request) {
@@ -112,8 +115,17 @@ func HandleLogout(w http.ResponseWriter, r *http.Request) {
 }
 
 func ServeShow(w http.ResponseWriter, r *http.Request) {
-	HandleGet(w, r, "show.html")
-	//TODO ....
+	var l pwshow.UserList
+	HandleGet(w, r, "show.html", u)
+	user := authentication.GetUsername(r)
+	if f := HandlePost(r); len(f) != 0 {
+		category := strings.Join(f["category"], "")
+		l = pwshow.ShowCreds(user, category)
+		if len(l) != 0 {
+			u.CredList = l
+			http.Redirect(w, r, "/show", http.StatusFound)
+		}
+	}
 }
 
 func ServeUpdate(w http.ResponseWriter, r *http.Request) {
@@ -122,8 +134,26 @@ func ServeUpdate(w http.ResponseWriter, r *http.Request) {
 }
 
 func ServeAdd(w http.ResponseWriter, r *http.Request) {
-	HandleGet(w, r, "add.html")
+	if cookie := authentication.CheckCookie(r); cookie {
+		u.Cookie = true
+		Tuser := authentication.GetUsername(r)
+		u.Username = Tuser
+		// Serving the html page
+		HandleGet(w, r, "add.html", u)
+		u.Ok = false
+		// handling the post request
+		if f := HandlePost(r); len(f) != 0 {
+			username := strings.Join(f["user"], "")
+			passw := strings.Join(f["passw"], "")
+			category := strings.Join(f["category"], "")
+			if IsSaved := pwsaver.AddCreds(username, passw, category, Tuser); IsSaved {
+				u.Ok = true
+				http.Redirect(w, r, "/add", http.StatusFound)
+			}
+		}
+	}
 }
+
 func ServeDelete(w http.ResponseWriter, r *http.Request) {
 	HandleGet(w, r, "delete.html")
 }
