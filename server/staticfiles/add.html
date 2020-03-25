@@ -1,10 +1,16 @@
 
-
 <html>
 	<head>
-		<title>save password </title>
+    {{ if .Cookie }}
+    <title>Save Passwords for {{ .Username }}</title>
+    {{ end }}
 	</head>
 	<body>
+		{{ if .Ok }}
+			<script type="text/javascript">
+        alert("success")
+      </script>
+    {{ end }}
 		<form action="/add" method="post">
 			<label>Username</label>
 			<input type="text" name="user" required>
@@ -15,9 +21,6 @@
 			<input type="submit" name="Save">
 		</form>
 
-<!--		{{ if .Ok }}
-			<script type="text/javascript">alert("success")</script>
-		{{ end }}
-		-->
+
 	</body>
 </html>

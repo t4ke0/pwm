@@ -1,7 +1,13 @@
 
 <html>
-	<head><title>Register</title></head>
+	<head>
+		<title>Register</title>
+	</head>
+	
 	<body>
+    {{ if .Cookie }}
+    <center><h5>logout to register</h5><a href="/logout">logout</a></center>
+    {{ else }}
 		<form action="/register" method="post">
 			<label><b>Username</b></label>
 			<input type="text" name="user" placeholder="Enter username" required>
@@ -13,6 +19,7 @@
 			<input type="submit" id="btn" value="Register">
 		</form>
 		<center><h5 id="msg"></h5></center>
+    {{ end }}
 	</body>
 
 	<script type="text/javascript">

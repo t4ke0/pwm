@@ -6,11 +6,10 @@ import (
 	"net/http"
 )
 
-func LoginHandle(w http.ResponseWriter, r *http.Request) {
+func LogoutHandle(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("[%s] %s\n", r.Method, r.URL.Path)
-	if r.URL.Path != "/login" {
+	if r.URL.Path != "/logout" {
 		fmt.Fprintf(w, "404 Not Found", http.StatusNotFound)
 	}
-	dialer.ServeLogin(w, r)
-
+	dialer.HandleLogout(w, r)
 }

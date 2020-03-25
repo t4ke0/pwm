@@ -2,8 +2,9 @@ package handler
 
 import (
 	"fmt"
-	"github.com/TaKeO90/pwm/server/dialer"
 	"net/http"
+
+	"../dialer"
 )
 
 func HomeHandle(w http.ResponseWriter, r *http.Request) {
