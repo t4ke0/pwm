@@ -2,11 +2,15 @@
 
 ## TEST PROJECT for learning Go lang
 
-## Roadmap
+## SO FAR 
+```
+Register & login 
+generating encryption key for the user for encrypting and decrypting credentials 
+Save & Show User Credentials 
 
-- [ ] prevent clear text password beeing seen (ssl-proxy, os/exec, ...)
-- [ ] fix error coverage
-- [ ] complete roadmap
+```
+
+
 
 ## Trying the Code [developping mode]
 
