@@ -1,6 +1,6 @@
 
 
-## TEST PROJECT for learning Go lang
+## Transforming an application written with python to a golang microservices
 
 ## SO FAR 
 ```
