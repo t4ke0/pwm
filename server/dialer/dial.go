@@ -1,17 +1,19 @@
 package dialer
 
 import (
+	"fmt"
+	"html/template"
+	"log"
+	"net/http"
+	"strconv"
+	"strings"
+
 	"../../authentication"
 	"../../identityprovider"
 	//	"../../services/pwdelete"
 	"../../services/pwsaver"
 	"../../services/pwshow"
-	//	"../../services/pwupdate"
-	"fmt"
-	"html/template"
-	"log"
-	"net/http"
-	"strings"
+	"../../services/pwupdate"
 )
 
 const Static string = "./server/staticfiles/"
@@ -20,6 +22,8 @@ type User struct {
 	Username string
 	Ok       bool
 	Cookie   bool
+	IsEmpty  bool
+	Updated  bool
 	CredList pwshow.UserList
 }
 
@@ -116,21 +120,52 @@ func HandleLogout(w http.ResponseWriter, r *http.Request) {
 
 func ServeShow(w http.ResponseWriter, r *http.Request) {
 	var l pwshow.UserList
-	HandleGet(w, r, "show.html", u)
-	user := authentication.GetUsername(r)
-	if f := HandlePost(r); len(f) != 0 {
-		category := strings.Join(f["category"], "")
-		l = pwshow.ShowCreds(user, category)
-		if len(l) != 0 {
-			u.CredList = l
-			http.Redirect(w, r, "/show", http.StatusFound)
+	if cookie := authentication.CheckCookie(r); cookie {
+		HandleGet(w, r, "show.html", u)
+		user := authentication.GetUsername(r)
+		if f := HandlePost(r); len(f) != 0 {
+			category := strings.Join(f["category"], "")
+			l = pwshow.ShowCreds(user, category)
+			if len(l) != 0 {
+				u.CredList = l
+				http.Redirect(w, r, "/show", http.StatusFound)
+			} else {
+				u.IsEmpty = true
+				http.Redirect(w, r, "/show", http.StatusFound)
+			}
 		}
+	} else {
+		fmt.Fprintf(w, "You Are Not Loggedin")
 	}
 }
 
 func ServeUpdate(w http.ResponseWriter, r *http.Request) {
-	HandleGet(w, r, "update.html")
-	//TODO ....
+	if cookie := authentication.CheckCookie(r); cookie {
+		username := authentication.GetUsername(r)
+		HandleGet(w, r, "update.html", u)
+		u.Updated = false
+		if f := HandlePost(r); len(f) != 0 {
+			id := strings.Join(f["id"], "")
+			user := strings.Join(f["user"], "")
+			password := strings.Join(f["passw"], "")
+			category := strings.Join(f["catg"], "")
+			iid, err := strconv.Atoi(id)
+			if err != nil {
+				log.Fatal(err)
+			}
+			m := pwupdate.UpdateCreds(iid, username, user, password, category)
+			if m["user"] == true {
+				u.Updated = true
+			} else if m["password"] == true {
+				u.Updated = true
+			} else if m["category"] == true {
+				u.Updated = true
+			}
+			http.Redirect(w, r, "/update", http.StatusFound)
+		}
+	} else {
+		fmt.Fprintf(w, "You Are Not Loggedin")
+	}
 }
 
 func ServeAdd(w http.ResponseWriter, r *http.Request) {
@@ -151,6 +186,8 @@ func ServeAdd(w http.ResponseWriter, r *http.Request) {
 				http.Redirect(w, r, "/add", http.StatusFound)
 			}
 		}
+	} else {
+		fmt.Fprintf(w, "You Are Not Loggedin")
 	}
 }
 
