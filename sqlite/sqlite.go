@@ -116,7 +116,7 @@ func Login(user string, passw string, db *sql.DB) bool {
 		if username == user && password == phx {
 			result = true
 		} else {
-			result = false
+			continue
 		}
 	}
 
