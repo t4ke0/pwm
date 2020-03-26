@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Delete Creds for {{ .Username }}</title>
+</head>
+<body>
+	<center><form action="/delete" method="post">
+		<label>Id of the credential you wanna delete</label>
+		<input type="number" name="id">
+	</form></center>
+
+
+	{{ if .Ok }}
+		<script>alert("Deleted successfully")</script>
+	{{ end }}
+
+</body>
+</html>
