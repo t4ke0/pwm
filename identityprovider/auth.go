@@ -3,6 +3,7 @@ package identityprovider
 import (
 	"../authentication"
 	"../services/pwencrypter"
+	"../services/serverenc"
 	"log"
 	"net/http"
 )
@@ -32,7 +33,10 @@ func GetRegister(r *http.Request, user string, password string, email string) bo
 		authentication.Register(user, password, email)
 		// Generating the encryption key for the user then save it in the keys directory
 		key := pwencrypter.GenKeyP(password)
-		if isSaved := pwencrypter.SaveKey(key, user); isSaved {
+		// Load server key and Encrypt user key
+		srvk := pwencrypter.LoadKey("server")
+		nuserK := serverenc.EncryptUserKey(key, srvk)
+		if isSaved := pwencrypter.SaveKey(nuserK, user); isSaved {
 			rr = true
 		}
 	}

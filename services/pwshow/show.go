@@ -3,8 +3,11 @@ package pwshow
 import (
 	"../../sqlite"
 	"../pwencrypter"
+	"../serverenc"
 	"encoding/hex"
+	"io/ioutil"
 	"log"
+	"path"
 )
 
 type UserStuff struct {
@@ -26,7 +29,16 @@ var (
 func AddToList(i []string, u []string, p []string, c []string, user string) UserList {
 	//Clear the FinalList Each Call
 	FinalList = FinalList[:0]
-	key := pwencrypter.LoadKey(user)
+	//	key := pwencrypter.LoadKey(user)
+	// Loading User Key
+	userk, err := ioutil.ReadFile(path.Join(serverenc.KeysDir, user+".key"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	// Load Server Key
+	serverK := pwencrypter.LoadKey("server")
+	// Decrypt User Key
+	decKey := serverenc.DecryptUserKey(userk, serverK)
 	for x, _ := range i {
 		src := []byte(p[x])
 		dst := make([]byte, hex.DecodedLen(len(src)))
@@ -34,7 +46,7 @@ func AddToList(i []string, u []string, p []string, c []string, user string) User
 		if err != nil {
 			log.Fatal(err)
 		}
-		U.Id, U.Username, U.Password, U.Category = i[x], u[x], pwencrypter.Decrypt(dst[:n], key), c[x]
+		U.Id, U.Username, U.Password, U.Category = i[x], u[x], pwencrypter.Decrypt(dst[:n], decKey), c[x]
 		FinalList = append(FinalList, U)
 	}
 	return FinalList

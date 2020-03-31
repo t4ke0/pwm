@@ -4,6 +4,9 @@
 <html>
 	<head><title>Show Creds</title></head>
 	<body>
+    {{ if .IsEmpty }}
+      <center><h3>You Got Nothing To show <a href="/add">Click to Add Credentials</a></h3></center>
+    {{ else }}
 		<div class="form">
 			<form action="/show" method="post">
 				<label>Filter by Category</label>
@@ -27,10 +30,7 @@
 
 			</table>
 		</div>
-    {{ if .IsEmpty }}
-      <center><h3>You Got Nothing To show <a href="/add">Click to Add Credentials</a></h3></center>
-    {{ end }}
-		
+		{{ end }}
 	</body>
 
 

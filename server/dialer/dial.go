@@ -10,7 +10,7 @@ import (
 
 	"../../authentication"
 	"../../identityprovider"
-	//	"../../services/pwdelete"
+	"../../services/pwdelete"
 	"../../services/pwsaver"
 	"../../services/pwshow"
 	"../../services/pwupdate"
@@ -192,5 +192,18 @@ func ServeAdd(w http.ResponseWriter, r *http.Request) {
 }
 
 func ServeDelete(w http.ResponseWriter, r *http.Request) {
-	HandleGet(w, r, "delete.html")
+	if cookie := authentication.CheckCookie(r); cookie {
+		HandleGet(w, r, "delete.html", u)
+		u.Ok = false
+		if f := HandlePost(r); len(f) != 0 {
+			id, err := strconv.Atoi(strings.Join(f["id"], ""))
+			CheckError(err)
+			if isDeleted := pwdelete.DeleteCreds(id); isDeleted {
+				u.Ok = true
+				http.Redirect(w, r, "/delete", http.StatusFound)
+			}
+		}
+	} else {
+		fmt.Fprintf(w, "You are not loggeding")
+	}
 }

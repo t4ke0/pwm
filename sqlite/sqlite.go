@@ -117,6 +117,7 @@ func Login(user string, passw string, db *sql.DB) bool {
 			result = true
 		} else {
 			continue
+			//result = false
 		}
 	}
 

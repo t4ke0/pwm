@@ -2,16 +2,27 @@ package pwupdate
 
 import (
 	"encoding/hex"
+	"io/ioutil"
+	"log"
+	"path"
 
 	"../../sqlite"
 	"../pwencrypter"
+	"../serverenc"
 )
 
 func UpdateCreds(id int, username string, user string, password string, category string) map[string]bool {
 	db := sqlite.InitDb()
 	//uid := sqlite.GetUid(username, db)
-	key := pwencrypter.LoadKey(username)
-	encp := pwencrypter.Encrypt(password, key)
+	ukey, err := ioutil.ReadFile(path.Join(serverenc.KeysDir, username+".key"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	// load server key
+	serverk := pwencrypter.LoadKey("server")
+	// Decrypt user key
+	decK := serverenc.DecryptUserKey(ukey, serverk)
+	encp := pwencrypter.Encrypt(password, decK)
 	hexenc := make([]byte, hex.EncodedLen(len(encp)))
 	hex.Encode(hexenc, encp)
 	ud := sqlite.Update(id, db, user, string(hexenc), category)

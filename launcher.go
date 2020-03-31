@@ -8,7 +8,12 @@ import (
 	"os/exec"
 )
 
-const MAIN string = "./server/main.go"
+const (
+	MAIN       string = "./server/main.go"
+	ServerGenK string = "./server/genkey/main.go"
+
+//	ServerKeyHandler string = "./server/genKey/main.go"
+)
 
 func StartProcess(args ...string) (p *os.Process, err error) {
 	//Make sure the first argument is on out PATH env
@@ -19,13 +24,19 @@ func StartProcess(args ...string) (p *os.Process, err error) {
 		if err == nil {
 			return p, nil
 		}
-
 	}
 	return nil, err
 }
 
 func StartServer() (p *os.Process) {
 	if p, err := StartProcess("go", "run", MAIN); err == nil {
+		return p
+	}
+	return nil
+}
+
+func CheckServerKey() (p *os.Process) {
+	if p, err := StartProcess("go", "run", ServerGenK); err == nil {
 		return p
 	}
 	return nil
@@ -42,6 +53,7 @@ func InitDatabase() {
 }
 
 func main() {
+	CheckServerKey().Wait()
 	InitDatabase()
 	StartServer().Wait()
 }
