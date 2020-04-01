@@ -16,34 +16,41 @@ import (
 	"../../services/pwupdate"
 )
 
+// Static indicates Static Files "html files"
 const Static string = "./server/staticfiles/"
 
+// User Struct
 type User struct {
-	Username string
-	Ok       bool
-	Cookie   bool
-	IsEmpty  bool
-	Updated  bool
-	CredList pwshow.UserList
+	Username  string
+	Ok        bool
+	Cookie    bool
+	IsEmpty   bool
+	Updated   bool
+	UserExist bool
+	CredList  pwshow.UserList
 }
 
 type usr User
 
 var u usr
 
+// HandleGet function handles GET http method
+// By Serving the html files and passing User Struct fields into templates
 func HandleGet(w http.ResponseWriter, r *http.Request, tempt string, args ...usr) {
 
 	if req := r.Method; req == "GET" {
 		t, err := template.ParseFiles(Static + tempt)
 		CheckError(err)
 		if len(args) < 1 {
-			fmt.Println(t.Execute(w, nil)) //To remove fmt for debugging only
+			t.Execute(w, nil)
 		} else {
-			fmt.Println(t.Execute(w, args[0]))
+			t.Execute(w, args[0])
 		}
 	}
 }
 
+// HandlePost function handles Post http method
+// Gets input from form and returns it as map[string][]string
 func HandlePost(r *http.Request) map[string][]string {
 	var m map[string][]string
 
@@ -54,12 +61,14 @@ func HandlePost(r *http.Request) map[string][]string {
 	return m
 }
 
+// CheckError function check if err not nil then log the error
 func CheckError(err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
+// ServeHome serve the HOME Page for the user
 func ServeHome(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
@@ -74,6 +83,7 @@ func ServeHome(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ServeRegister serve the register Page for the user
 func ServeRegister(w http.ResponseWriter, r *http.Request) {
 	cookie := authentication.CheckCookie(r)
 	u.Cookie = cookie
@@ -86,11 +96,13 @@ func ServeRegister(w http.ResponseWriter, r *http.Request) {
 		if ok := identityprovider.GetRegister(r, user, password, email); ok {
 			http.Redirect(w, r, "/login", http.StatusFound)
 		} else {
+			u.UserExist = true
 			http.Redirect(w, r, "/register", http.StatusFound)
 		}
 	}
 }
 
+// ServeLogin serves login page for the user
 func ServeLogin(w http.ResponseWriter, r *http.Request) {
 	if cookie := authentication.CheckCookie(r); !cookie {
 		HandleGet(w, r, "login.html")
@@ -109,6 +121,7 @@ func ServeLogin(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// HandleLogout Logout the user
 func HandleLogout(w http.ResponseWriter, r *http.Request) {
 	if cookie := authentication.CheckCookie(r); cookie {
 		authentication.ClearSession(w)
@@ -118,6 +131,7 @@ func HandleLogout(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ServeShow Show User credentials
 func ServeShow(w http.ResponseWriter, r *http.Request) {
 	var l pwshow.UserList
 	if cookie := authentication.CheckCookie(r); cookie {
@@ -139,6 +153,7 @@ func ServeShow(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ServeUpdate Get item that Should be updated then sent them to Update service
 func ServeUpdate(w http.ResponseWriter, r *http.Request) {
 	if cookie := authentication.CheckCookie(r); cookie {
 		username := authentication.GetUsername(r)
@@ -168,6 +183,7 @@ func ServeUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ServeAdd Get items that should be added and send them to the save credential service to save them
 func ServeAdd(w http.ResponseWriter, r *http.Request) {
 	if cookie := authentication.CheckCookie(r); cookie {
 		u.Cookie = true
@@ -191,6 +207,7 @@ func ServeAdd(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ServeDelete Get the id number of the cred that should be deleted and send them to the delete service
 func ServeDelete(w http.ResponseWriter, r *http.Request) {
 	if cookie := authentication.CheckCookie(r); cookie {
 		HandleGet(w, r, "delete.html", u)

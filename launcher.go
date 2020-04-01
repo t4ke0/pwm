@@ -11,8 +11,6 @@ import (
 const (
 	MAIN       string = "./server/main.go"
 	ServerGenK string = "./server/genkey/main.go"
-
-//	ServerKeyHandler string = "./server/genKey/main.go"
 )
 
 func StartProcess(args ...string) (p *os.Process, err error) {

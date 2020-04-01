@@ -10,8 +10,12 @@ var cookieHandler = securecookie.New(
 	securecookie.GenerateRandomKey(64),
 	securecookie.GenerateRandomKey(32))
 
+// sessionCookie cookie name
 const sessionCookie = "session"
 
+// SetSession function takes username and the http response Writer as inputs
+// Then Encode User's username and use it as a session cookie
+// finally sets the cookie for the user otherwise it returns an error
 func SetSession(username string, w http.ResponseWriter) error {
 	value := map[string]string{
 		"name": username,
@@ -31,6 +35,7 @@ func SetSession(username string, w http.ResponseWriter) error {
 	return nil
 }
 
+// GetUsername function takes http request as input and returns the username who was encoded before in the cookie
 func GetUsername(r *http.Request) (username string) {
 	if cookie, err := r.Cookie(sessionCookie); err == nil {
 		cookieValue := make(map[string]string)
@@ -41,6 +46,7 @@ func GetUsername(r *http.Request) (username string) {
 	return username
 }
 
+// ClearSession function Clears the cookie by  modifying the cookie's MaxAge
 func ClearSession(w http.ResponseWriter) {
 	cookie := &http.Cookie{
 		Name:   sessionCookie,
@@ -51,6 +57,7 @@ func ClearSession(w http.ResponseWriter) {
 	http.SetCookie(w, cookie)
 }
 
+// CheckCookie function checks if there is already a cookie or not
 func CheckCookie(r *http.Request) bool {
 	var ok bool
 	if cookie, _ := r.Cookie(sessionCookie); cookie != nil {

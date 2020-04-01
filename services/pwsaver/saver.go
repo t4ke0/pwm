@@ -15,7 +15,7 @@ import (
 func AddCreds(user string, password string, category string, Cuser string) bool {
 	var isOk bool
 	db := sqlite.InitDb()
-	uid := sqlite.GetUid(Cuser, db)
+	uid := sqlite.GetUID(Cuser, db)
 	//	key := pwencrypter.LoadKey(Cuser) // user ioutil.ReadFile instead
 	key, err := ioutil.ReadFile(path.Join(serverenc.KeysDir, Cuser+".key"))
 	if err != nil {

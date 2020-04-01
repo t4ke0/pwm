@@ -10,6 +10,7 @@ import (
 	"path"
 )
 
+// UserStuff a struct which it field holds user credential fields
 type UserStuff struct {
 	Id       string
 	Username string
@@ -56,7 +57,7 @@ func AddToList(i []string, u []string, p []string, c []string, user string) User
 func ShowCreds(user string, category string) UserList {
 	var Fl UserList
 	db := sqlite.InitDb()
-	uid := sqlite.GetUid(user, db)
+	uid := sqlite.GetUID(user, db)
 	if category != "" {
 		i, u, p, c := sqlite.GetStuff(uid, category, db)
 		Fl = AddToList(i, u, p, c, user)

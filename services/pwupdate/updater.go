@@ -11,9 +11,10 @@ import (
 	"../serverenc"
 )
 
+// UpdateCreds Update Credentials
 func UpdateCreds(id int, username string, user string, password string, category string) map[string]bool {
 	db := sqlite.InitDb()
-	//uid := sqlite.GetUid(username, db)
+	//uid := sqlite.GetUID(username, db)
 	ukey, err := ioutil.ReadFile(path.Join(serverenc.KeysDir, username+".key"))
 	if err != nil {
 		log.Fatal(err)

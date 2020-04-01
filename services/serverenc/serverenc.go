@@ -9,6 +9,7 @@ import (
 	"../pwencrypter"
 )
 
+// KeysDir server key directory
 const KeysDir string = "./services/pwencrypter/keys"
 
 // GenerateRandomPassword for The Server for Generating an encryption key
@@ -35,6 +36,7 @@ func GenerateServerKey() bool {
 	return isSaved
 }
 
+// LookForServerKey Search for server encrpytion key if found return true otherwise return false
 func LookForServerKey() bool {
 	var found bool
 	files, err := ioutil.ReadDir(KeysDir)
@@ -54,12 +56,14 @@ func LookForServerKey() bool {
 	return found
 }
 
+// CheckError check for errors then log error if err is not nil
 func CheckError(err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
+// EncryptUserKey encrypt users key
 func EncryptUserKey(userkey, key []byte) []byte {
 	encK := make([]byte, hex.EncodedLen(len(userkey)))
 	hex.Encode(encK, userkey)
@@ -67,6 +71,7 @@ func EncryptUserKey(userkey, key []byte) []byte {
 	return encrk
 }
 
+// DecryptUserKey decrypt users key
 func DecryptUserKey(userkey, key []byte) []byte {
 	decK := pwencrypter.Decrypt(userkey, key)
 	hexdec := make([]byte, hex.DecodedLen(len([]byte(decK))))

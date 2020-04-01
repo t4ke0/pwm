@@ -20,7 +20,13 @@
 		</form>
 		<center><h5 id="msg"></h5></center>
     {{ end }}
+
+
 	</body>
+
+    {{ if .UserExist }}
+      <script>alert("User already Exist")</script>
+    {{ end }}
 
 	<script type="text/javascript">
 		function passwordCheck()

@@ -9,12 +9,14 @@ import (
 	"os"
 )
 
+// KeyGen Generate the server encryption key
 func KeyGen() {
 	if isGen := serverenc.GenerateServerKey(); isGen {
 		fmt.Println("Generated Server encryption key")
 	}
 }
 
+// CopyFile We use this to copy server encryption key if it's not in the Right place When launching the launcher
 func CopyFile(src, dst string) bool {
 	readSrc, err := ioutil.ReadFile(src)
 	if err != nil {

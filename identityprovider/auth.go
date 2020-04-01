@@ -1,13 +1,15 @@
 package identityprovider
 
 import (
+	"log"
+	"net/http"
+
 	"../authentication"
 	"../services/pwencrypter"
 	"../services/serverenc"
-	"log"
-	"net/http"
 )
 
+// GetLoggedin Login the User & give him an identity (Cookie)
 func GetLoggedin(w http.ResponseWriter, r *http.Request, user string, password string) bool {
 	var rr bool
 	if ok := authentication.CheckCookie(r); ok {
@@ -25,24 +27,30 @@ func GetLoggedin(w http.ResponseWriter, r *http.Request, user string, password s
 	return rr
 }
 
+// GetRegister Register the User (Function takes http request ,user , password and email as input and returns a bool)
 func GetRegister(r *http.Request, user string, password string, email string) bool {
 	var rr bool
 	if ok := authentication.CheckCookie(r); ok {
 		rr = false
 	} else {
-		authentication.Register(user, password, email)
-		// Generating the encryption key for the user then save it in the keys directory
-		key := pwencrypter.GenKeyP(password)
-		// Load server key and Encrypt user key
-		srvk := pwencrypter.LoadKey("server")
-		nuserK := serverenc.EncryptUserKey(key, srvk)
-		if isSaved := pwencrypter.SaveKey(nuserK, user); isSaved {
-			rr = true
+		if isRegistred := authentication.Register(user, password, email); !isRegistred {
+			rr = false
+		} else {
+			// Generating the encryption key for the user then save it in the keys directory
+			key := pwencrypter.GenKeyP(password)
+			// Load server key and Encrypt user key
+			srvk := pwencrypter.LoadKey("server")
+			nuserK := serverenc.EncryptUserKey(key, srvk)
+			if isSaved := pwencrypter.SaveKey(nuserK, user); isSaved {
+				rr = true
+			}
 		}
 	}
 	return rr
 }
 
+// GetLoggedout Logout the User and clear session cookie
+// returns true if the process went good otherwise it returns false
 func GetLoggedout(w http.ResponseWriter, r *http.Request) bool {
 	var rr bool
 	if ok := authentication.CheckCookie(r); ok {

@@ -4,10 +4,13 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"encoding/base32"
+
+	// _ blank for importing sqlite3 driver
 	_ "github.com/mattn/go-sqlite3"
 	"strings"
 )
 
+// DB database file path
 const DB string = "./server/database.db"
 
 func checkError(err error) {
@@ -16,6 +19,7 @@ func checkError(err error) {
 	}
 }
 
+// InitDb Open sqlite3 File
 func InitDb() *sql.DB {
 	db, err := sql.Open("sqlite3", DB)
 	checkError(err)
@@ -25,6 +29,7 @@ func InitDb() *sql.DB {
 	return db
 }
 
+// CreateTables create tables
 func CreateTables(db *sql.DB) (bool, error) {
 
 	sqlStmt := `
@@ -54,8 +59,8 @@ func CreateTables(db *sql.DB) (bool, error) {
 
 }
 
+// CheckForUser check if already exist in the DB & returns the length of users array
 func CheckForUser(user string, db *sql.DB) int {
-
 	rows, err := db.Query("SELECT username FROM users")
 	checkError(err)
 
@@ -72,6 +77,7 @@ func CheckForUser(user string, db *sql.DB) int {
 	return len(users)
 }
 
+//Register Save New username , password and email of a new user
 func Register(user string, passw string, email string, db *sql.DB) int {
 
 	var rslt int
@@ -94,6 +100,7 @@ func Register(user string, passw string, email string, db *sql.DB) int {
 	return rslt
 }
 
+//Login Check if username and password entred are the same as the ones on db
 func Login(user string, passw string, db *sql.DB) bool {
 
 	rows, err := db.Query("SELECT * FROM users")
@@ -117,7 +124,6 @@ func Login(user string, passw string, db *sql.DB) bool {
 			result = true
 		} else {
 			continue
-			//result = false
 		}
 	}
 
@@ -125,6 +131,7 @@ func Login(user string, passw string, db *sql.DB) bool {
 	return result
 }
 
+// GetStuff get user credentials from db
 func GetStuff(uid int, category string, db *sql.DB) ([]string, []string, []string, []string) {
 
 	rows, err := db.Query("SELECT pwid ,user,passw,category,userid FROM passwords")
@@ -171,7 +178,8 @@ func GetStuff(uid int, category string, db *sql.DB) ([]string, []string, []strin
 	return i, u, p, c
 }
 
-func GetUid(user string, db *sql.DB) int {
+// GetUID get user id
+func GetUID(user string, db *sql.DB) int {
 
 	rows, err := db.Query("SELECT * FROM users")
 	checkError(err)
@@ -192,6 +200,7 @@ func GetUid(user string, db *sql.DB) int {
 	return id
 }
 
+// Update update credentials
 func Update(id int, db *sql.DB, args ...string) []int {
 
 	defer db.Close()
@@ -200,7 +209,7 @@ func Update(id int, db *sql.DB, args ...string) []int {
 	var f1 int
 	var ff []int
 
-	for i, _ := range args {
+	for i := range args {
 		if id != 0 && args[i] != "" && i == 0 {
 			stmt, err := db.Prepare("UPDATE passwords SET user=? WHERE pwid = ?")
 			checkError(err)
@@ -231,6 +240,7 @@ func Update(id int, db *sql.DB, args ...string) []int {
 	return ff
 }
 
+// Save save creds
 func Save(user string, passwd string, category string, uid int, db *sql.DB) bool {
 
 	var ok bool
@@ -247,6 +257,7 @@ func Save(user string, passwd string, category string, uid int, db *sql.DB) bool
 	return ok
 }
 
+//Delete delete credetials
 func Delete(id int, db *sql.DB) bool {
 	defer db.Close()
 
