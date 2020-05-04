@@ -1,64 +1,78 @@
 package dialer
 
 import (
-	"fmt"
-	"html/template"
+	"encoding/json"
 	"log"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"../../authentication"
 	"../../identityprovider"
+	"../../services/emailsender"
 	"../../services/pwdelete"
 	"../../services/pwsaver"
 	"../../services/pwshow"
 	"../../services/pwupdate"
 )
 
-// Static indicates Static Files "html files"
-const Static string = "./server/staticfiles/"
-
 // User Struct
 type User struct {
-	Username  string
-	Ok        bool
-	Cookie    bool
-	IsEmpty   bool
-	Updated   bool
-	UserExist bool
-	CredList  pwshow.UserList
+	Username string          `json:"Username"`
+	Ok       bool            `json:"Ok"`
+	IsEmpty  bool            `json:"isEmpty"`
+	Updated  bool            `json:"Updated"`
+	CredList pwshow.UserList `json:"CredList"`
 }
 
-type usr User
+// CookieUser
+type CookieUser struct {
+	Username string `json:Username`
+}
 
-var u usr
+//Register
+type Register struct {
+	IsReg bool `json:"IsReg"`
+}
 
-// HandleGet function handles GET http method
-// By Serving the html files and passing User Struct fields into templates
-func HandleGet(w http.ResponseWriter, r *http.Request, tempt string, args ...usr) {
+//Login
+type Login struct {
+	IsLog       bool   `json:"IsLog"`
+	CookieName  string `json:"CookieName"`
+	CookieValue string `json:"CookieValue"`
+}
 
-	if req := r.Method; req == "GET" {
-		t, err := template.ParseFiles(Static + tempt)
-		CheckError(err)
-		if len(args) < 1 {
-			t.Execute(w, nil)
-		} else {
-			t.Execute(w, args[0])
-		}
-	}
+type Token struct {
+	Code string `json:"Code"`
 }
 
 // HandlePost function handles Post http method
 // Gets input from form and returns it as map[string][]string
 func HandlePost(r *http.Request) map[string][]string {
 	var m map[string][]string
-
 	if r.Method == "POST" {
-		r.ParseForm()
+		r.ParseMultipartForm(0)
+		//r.ParseForm()
 		m = r.Form
 	}
 	return m
+}
+
+func setupResponse(w *http.ResponseWriter, r *http.Request) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "http://localhost:5000")
+	(*w).Header().Set("Access-Control-Allow-Methods", "POST,GET")
+	(*w).Header().Set("Access-Control-Allow-Credentials", "true")
+	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	(*w).Header().Set("Access-Control-Expose-Headers", "Set-Cookie") // Not Working TOBE removed
+	(*w).Header().Set("Content-Type", "application/json")
+}
+
+func handleOption(w http.ResponseWriter, r *http.Request) {
+	setupResponse(&w, r)
+	if r.Method == "OPTIONS" {
+		return
+	}
 }
 
 // CheckError function check if err not nil then log the error
@@ -68,96 +82,76 @@ func CheckError(err error) {
 	}
 }
 
-// ServeHome serve the HOME Page for the user
-func ServeHome(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case "GET":
-		user := authentication.GetUsername(r)
-		p := User{Username: user}
-		t, err := template.ParseFiles(Static + "home.html")
-		CheckError(err)
-		t.Execute(w, p)
-
-	case "POST":
-		fmt.Fprintf(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-	}
-}
-
-// ServeRegister serve the register Page for the user
+// ServeRegister Serve Registration
 func ServeRegister(w http.ResponseWriter, r *http.Request) {
-	cookie := authentication.CheckCookie(r)
-	u.Cookie = cookie
-	HandleGet(w, r, "register.html", u)
+	handleOption(w, r)
 	if f := HandlePost(r); len(f) != 0 {
 		user := strings.Join(f["user"], "")
 		password := strings.Join(f["passw"], "")
 		email := strings.Join(f["email"], "")
-
+		regtr := &Register{}
 		if ok := identityprovider.GetRegister(r, user, password, email); ok {
-			http.Redirect(w, r, "/login", http.StatusFound)
+			regtr.IsReg = true
+			json.NewEncoder(w).Encode(regtr)
 		} else {
-			u.UserExist = true
-			http.Redirect(w, r, "/register", http.StatusFound)
+			regtr.IsReg = false
+			json.NewEncoder(w).Encode(regtr)
 		}
 	}
 }
 
-// ServeLogin serves login page for the user
+// ServeLogin handle login process
 func ServeLogin(w http.ResponseWriter, r *http.Request) {
-	if cookie := authentication.CheckCookie(r); !cookie {
-		HandleGet(w, r, "login.html")
-	} else {
-		fmt.Fprintf(w, "You are Already logged in")
-	}
-
+	handleOption(w, r)
 	if f := HandlePost(r); len(f) != 0 {
 		user := strings.Join(f["user"], "")
 		password := strings.Join(f["passw"], "")
-		if ok := identityprovider.GetLoggedin(w, r, user, password); ok {
-			http.Redirect(w, r, "/", http.StatusFound)
+		logg := &Login{}
+		if cookie, ok := identityprovider.GetLoggedin(w, r, user, password); ok {
+			logg.CookieName = cookie.Name
+			logg.CookieValue = cookie.Value
+			logg.IsLog = true
+			json.NewEncoder(w).Encode(logg)
 		} else {
-			fmt.Fprintf(w, "Wrong username or password!")
+			logg.IsLog = false
+			json.NewEncoder(w).Encode(logg)
 		}
 	}
 }
 
-// HandleLogout Logout the user
-func HandleLogout(w http.ResponseWriter, r *http.Request) {
-	if cookie := authentication.CheckCookie(r); cookie {
-		authentication.ClearSession(w)
-		fmt.Fprintf(w, "You were Logged out")
-	} else {
-		fmt.Fprintf(w, "You are already logged out")
-	}
+//CookieDecode
+func CookieDecode(w http.ResponseWriter, r *http.Request) {
+	handleOption(w, r)
+	uname := authentication.GetUsername(r)
+	c := &CookieUser{uname}
+	json.NewEncoder(w).Encode(c)
 }
 
 // ServeShow Show User credentials
 func ServeShow(w http.ResponseWriter, r *http.Request) {
+	handleOption(w, r)
 	var l pwshow.UserList
-	if cookie := authentication.CheckCookie(r); cookie {
-		HandleGet(w, r, "show.html", u)
-		user := authentication.GetUsername(r)
-		if f := HandlePost(r); len(f) != 0 {
-			category := strings.Join(f["category"], "")
-			l = pwshow.ShowCreds(user, category)
-			if len(l) != 0 {
-				u.CredList = l
-				http.Redirect(w, r, "/show", http.StatusFound)
-			} else {
-				u.IsEmpty = true
-				http.Redirect(w, r, "/show", http.StatusFound)
-			}
+	user := authentication.GetUsername(r)
+	if f := HandlePost(r); len(f) != 0 {
+		category := strings.Join(f["category"], "")
+		l = pwshow.ShowCreds(user, category)
+		u := &User{}
+		if len(l) != 0 {
+			u.CredList = l
+			json.NewEncoder(w).Encode(u)
+		} else {
+			u.IsEmpty = true
+			json.NewEncoder(w).Encode(u)
 		}
-	} else {
-		fmt.Fprintf(w, "You Are Not Loggedin")
 	}
 }
 
 // ServeUpdate Get item that Should be updated then sent them to Update service
 func ServeUpdate(w http.ResponseWriter, r *http.Request) {
+	handleOption(w, r)
+	u := &User{}
 	if cookie := authentication.CheckCookie(r); cookie {
 		username := authentication.GetUsername(r)
-		HandleGet(w, r, "update.html", u)
 		u.Updated = false
 		if f := HandlePost(r); len(f) != 0 {
 			id := strings.Join(f["id"], "")
@@ -165,9 +159,7 @@ func ServeUpdate(w http.ResponseWriter, r *http.Request) {
 			password := strings.Join(f["passw"], "")
 			category := strings.Join(f["catg"], "")
 			iid, err := strconv.Atoi(id)
-			if err != nil {
-				log.Fatal(err)
-			}
+			CheckError(err)
 			m := pwupdate.UpdateCreds(iid, username, user, password, category)
 			if m["user"] == true {
 				u.Updated = true
@@ -176,21 +168,21 @@ func ServeUpdate(w http.ResponseWriter, r *http.Request) {
 			} else if m["category"] == true {
 				u.Updated = true
 			}
-			http.Redirect(w, r, "/update", http.StatusFound)
+			json.NewEncoder(w).Encode(u)
 		}
 	} else {
-		fmt.Fprintf(w, "You Are Not Loggedin")
+		u.Updated = false
+		json.NewEncoder(w).Encode(u)
 	}
 }
 
 // ServeAdd Get items that should be added and send them to the save credential service to save them
 func ServeAdd(w http.ResponseWriter, r *http.Request) {
+	handleOption(w, r)
+	u := &User{}
 	if cookie := authentication.CheckCookie(r); cookie {
-		u.Cookie = true
 		Tuser := authentication.GetUsername(r)
 		u.Username = Tuser
-		// Serving the html page
-		HandleGet(w, r, "add.html", u)
 		u.Ok = false
 		// handling the post request
 		if f := HandlePost(r); len(f) != 0 {
@@ -199,28 +191,58 @@ func ServeAdd(w http.ResponseWriter, r *http.Request) {
 			category := strings.Join(f["category"], "")
 			if IsSaved := pwsaver.AddCreds(username, passw, category, Tuser); IsSaved {
 				u.Ok = true
-				http.Redirect(w, r, "/add", http.StatusFound)
+				json.NewEncoder(w).Encode(u)
 			}
 		}
 	} else {
-		fmt.Fprintf(w, "You Are Not Loggedin")
+		u.Ok = false
+		json.NewEncoder(w).Encode(u)
 	}
 }
 
 // ServeDelete Get the id number of the cred that should be deleted and send them to the delete service
 func ServeDelete(w http.ResponseWriter, r *http.Request) {
+	handleOption(w, r)
+	u := &User{}
 	if cookie := authentication.CheckCookie(r); cookie {
-		HandleGet(w, r, "delete.html", u)
 		u.Ok = false
 		if f := HandlePost(r); len(f) != 0 {
 			id, err := strconv.Atoi(strings.Join(f["id"], ""))
 			CheckError(err)
 			if isDeleted := pwdelete.DeleteCreds(id); isDeleted {
 				u.Ok = true
-				http.Redirect(w, r, "/delete", http.StatusFound)
+				json.NewEncoder(w).Encode(u)
 			}
 		}
 	} else {
-		fmt.Fprintf(w, "You are not loggeding")
+		u.Ok = false
+		json.NewEncoder(w).Encode(u)
+	}
+}
+
+func ServepwForget(w http.ResponseWriter, r *http.Request) {
+	handleOption(w, r)
+	t := &Token{}
+	if f := HandlePost(r); len(f) != 0 {
+		if email := strings.Join(f["email"], ""); email != "" {
+			if mailExist := authentication.CheckMail(email); mailExist {
+				gencode := rand.Perm(6)
+				var c string
+				// Conver []int into string
+				for _, n := range gencode {
+					c += strconv.Itoa(n)
+				}
+				//TODO: send generated code vim email "c"
+				if sent, err := emailsender.SendCode(c, email); err != nil {
+					log.Fatal(err)
+				} else if sent {
+					t.Code = c
+					json.NewEncoder(w).Encode(t)
+				}
+			} else {
+				t.Code = ""
+				json.NewEncoder(w).Encode(t)
+			}
+		}
 	}
 }

@@ -44,3 +44,19 @@ func Login(username string, password string) bool {
 	}
 	return ok
 }
+
+func CheckMail(email string) bool {
+	db, err := sql.Open("sqlite3", DB)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+	var ok bool
+	exist := sqlite.CheckForMail(email, db)
+	if exist {
+		ok = true
+	} else {
+		ok = false
+	}
+	return ok
+}

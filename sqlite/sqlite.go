@@ -77,12 +77,35 @@ func CheckForUser(user string, db *sql.DB) int {
 	return len(users)
 }
 
+func CheckForMail(email string, db *sql.DB) bool {
+	rows, err := db.Query("SELECT email FROM users")
+	checkError(err)
+	var (
+		mail    string
+		isExist bool
+	)
+
+	for rows.Next() {
+		err = rows.Scan(&mail)
+		checkError(err)
+		if email == mail {
+			isExist = true
+			break
+		} else {
+			isExist = false
+		}
+	}
+	return isExist
+}
+
 //Register Save New username , password and email of a new user
 func Register(user string, passw string, email string, db *sql.DB) int {
 
 	var rslt int
 
-	if isexist := CheckForUser(user, db); isexist == 1 {
+	isexist := CheckForUser(user, db)
+	emailExist := CheckForMail(email, db)
+	if isexist == 1 && emailExist {
 		rslt = 1
 		db.Close()
 	} else {
