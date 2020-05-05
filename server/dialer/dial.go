@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"../../authentication"
 	"../../identityprovider"
@@ -44,7 +45,16 @@ type Login struct {
 }
 
 type Token struct {
-	Code string `json:"Code"`
+	Code string
+}
+
+type Password struct {
+	Updated bool `json:"Updated"`
+}
+
+type Email struct {
+	Response bool `json:"Response"`
+	IsEqual  bool `json:"IsEqual"`
 }
 
 // HandlePost function handles Post http method
@@ -220,28 +230,51 @@ func ServeDelete(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+var t Token
+
 func ServepwForget(w http.ResponseWriter, r *http.Request) {
 	handleOption(w, r)
-	t := &Token{}
+	e := &Email{}
 	if f := HandlePost(r); len(f) != 0 {
-		if email := strings.Join(f["email"], ""); email != "" {
+		password := strings.Join(f["npassword"], "")
+		if email := strings.Join(f["email"], ""); email != "" && password == "" {
 			if mailExist := authentication.CheckMail(email); mailExist {
+				rand.Seed(time.Now().UnixNano())
 				gencode := rand.Perm(6)
 				var c string
-				// Conver []int into string
+				// Convert []int into string
 				for _, n := range gencode {
 					c += strconv.Itoa(n)
 				}
-				//TODO: send generated code vim email "c"
 				if sent, err := emailsender.SendCode(c, email); err != nil {
 					log.Fatal(err)
 				} else if sent {
 					t.Code = c
-					json.NewEncoder(w).Encode(t)
+					e.Response = true
+					json.NewEncoder(w).Encode(e)
 				}
 			} else {
 				t.Code = ""
-				json.NewEncoder(w).Encode(t)
+				e.Response = false
+				json.NewEncoder(w).Encode(e)
+			}
+		} else if code := strings.Join(f["code"], ""); code != "" {
+			if code == t.Code {
+				e.IsEqual = true
+				json.NewEncoder(w).Encode(e)
+			} else {
+				e.IsEqual = false
+				json.NewEncoder(w).Encode(e)
+			}
+		} else if password != "" && email != "" {
+			p := &Password{}
+			isUpdated := authentication.UpdatePassword(email, password)
+			if isUpdated {
+				p.Updated = isUpdated
+				json.NewEncoder(w).Encode(p)
+			} else {
+				p.Updated = false
+				json.NewEncoder(w).Encode(p)
 			}
 		}
 	}

@@ -224,6 +224,7 @@ func GetUID(user string, db *sql.DB) int {
 }
 
 // Update update credentials
+// TODO: UPdate this Function to a nicer version note: use initialized values instead of args
 func Update(id int, db *sql.DB, args ...string) []int {
 
 	defer db.Close()
@@ -261,6 +262,19 @@ func Update(id int, db *sql.DB, args ...string) []int {
 		}
 	}
 	return ff
+}
+
+func UpdatePw(password, email string, db *sql.DB) bool {
+	h := sha256.New()
+	h.Write([]byte(password))
+	ph := h.Sum(nil)
+	phx := strings.ToLower(base32.HexEncoding.EncodeToString(ph))
+
+	stmt, err := db.Prepare("UPDATE users SET password=? WHERE email = ?")
+	checkError(err)
+	_, err = stmt.Exec(phx, email)
+	checkError(err)
+	return true
 }
 
 // Save save creds

@@ -60,3 +60,13 @@ func CheckMail(email string) bool {
 	}
 	return ok
 }
+
+func UpdatePassword(email, password string) bool {
+	db, err := sql.Open("sqlite3", DB)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+	isUpdated := sqlite.UpdatePw(password, email, db)
+	return isUpdated
+}
