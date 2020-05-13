@@ -142,7 +142,7 @@ func ServeShow(w http.ResponseWriter, r *http.Request) {
 	handleOption(w, r)
 	var l pwshow.UserList
 	user := authentication.GetUsername(r)
-	if f := HandlePost(r); len(f) != 0 {
+	if f := HandlePost(r); len(f) != 0 && user != "" {
 		category := strings.Join(f["category"], "")
 		l = pwshow.ShowCreds(user, category)
 		u := &User{}
@@ -232,6 +232,7 @@ func ServeDelete(w http.ResponseWriter, r *http.Request) {
 
 var t Token
 
+//TODO: add a coroutine to send emails
 func ServepwForget(w http.ResponseWriter, r *http.Request) {
 	handleOption(w, r)
 	e := &Email{}
