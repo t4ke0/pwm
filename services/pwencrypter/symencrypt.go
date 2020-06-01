@@ -39,7 +39,7 @@ func GenKeyP(p string) []byte {
 }
 
 // SaveKey Func Save user's encryption key into a file named with his username
-// The Func takes k encryption key the user generate in the beggining and user "username of the user"
+// The Func takes k encryption key the user generate in the beginning and user "username of the user"
 func SaveKey(k []byte, user string) bool {
 	filename := filepath.Join(KeysPath, user+".key")
 	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0600)
@@ -60,6 +60,7 @@ func LoadKey(user string) []byte {
 	CheckError(err)
 	defer f.Close()
 	n, err := f.Read(b)
+	CheckError(err)
 	return b[:n]
 }
 

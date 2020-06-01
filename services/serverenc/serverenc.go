@@ -36,7 +36,7 @@ func GenerateServerKey() bool {
 	return isSaved
 }
 
-// LookForServerKey Search for server encrpytion key if found return true otherwise return false
+// LookForServerKey Search for server encryption key if found return true otherwise return false
 func LookForServerKey() bool {
 	var found bool
 	files, err := ioutil.ReadDir(KeysDir)
