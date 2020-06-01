@@ -45,6 +45,7 @@ func Login(username string, password string) bool {
 	return ok
 }
 
+//CheckMail check if mail is already exist in our db
 func CheckMail(email string) bool {
 	db, err := sql.Open("sqlite3", DB)
 	if err != nil {
@@ -61,6 +62,7 @@ func CheckMail(email string) bool {
 	return ok
 }
 
+//UpdatePassword update user password
 func UpdatePassword(email, password string) bool {
 	db, err := sql.Open("sqlite3", DB)
 	if err != nil {

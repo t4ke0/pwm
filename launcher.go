@@ -9,11 +9,11 @@ import (
 )
 
 const (
-	MAIN       string = "./server/main.go"
-	ServerGenK string = "./server/genkey/main.go"
+	mainf      string = "./server/main.go"
+	servergenk string = "./server/genkey/main.go"
 )
 
-func StartProcess(args ...string) (p *os.Process, err error) {
+func startProcess(args ...string) (p *os.Process, err error) {
 	//Make sure the first argument is on out PATH env
 	if args[0], err = exec.LookPath(args[0]); err == nil {
 		var procAttr os.ProcAttr
@@ -26,21 +26,21 @@ func StartProcess(args ...string) (p *os.Process, err error) {
 	return nil, err
 }
 
-func StartServer() (p *os.Process) {
-	if p, err := StartProcess("go", "run", MAIN); err == nil {
+func startServer() (p *os.Process) {
+	if p, err := startProcess("go", "run", mainf); err == nil {
 		return p
 	}
 	return nil
 }
 
-func CheckServerKey() (p *os.Process) {
-	if p, err := StartProcess("go", "run", ServerGenK); err == nil {
+func checkServerKey() (p *os.Process) {
+	if p, err := startProcess("go", "run", servergenk); err == nil {
 		return p
 	}
 	return nil
 }
 
-func InitDatabase() {
+func initDatabase() {
 	db := sqlite.InitDb()
 	_, err := sqlite.CreateTables(db)
 	if err == nil {
@@ -51,7 +51,7 @@ func InitDatabase() {
 }
 
 func main() {
-	CheckServerKey().Wait()
-	InitDatabase()
-	StartServer().Wait()
+	checkServerKey().Wait()
+	initDatabase()
+	startServer().Wait()
 }

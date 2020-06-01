@@ -14,7 +14,9 @@ import (
 )
 
 const (
+	//SALTBYTE salt size
 	SALTBYTE = 32
+	//KeysPath server and users encryption key path
 	KeysPath = "./services/pwencrypter/keys"
 )
 

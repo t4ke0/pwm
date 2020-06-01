@@ -17,14 +17,17 @@ type UserStuff struct {
 	Category string
 }
 
+//UserList list of UserStuff type
 type UserList []UserStuff
 
 var (
+	//FinalList variable where we store user creds
 	FinalList UserList
-	U         = UserStuff{}
+	//U variable where we put user creds before we append them to the FinalList
+	U = UserStuff{}
 )
 
-// Add Creds To the FinalList
+//AddToList Add Creds To the FinalList
 // Load User Encryption Key and decrypt passwrds
 func AddToList(u []string, p []string, c []string, user string) UserList {
 	//Clear the FinalList Each Call
@@ -39,7 +42,7 @@ func AddToList(u []string, p []string, c []string, user string) UserList {
 	serverK := pwencrypter.LoadKey("server")
 	// Decrypt User Key
 	decKey := serverenc.DecryptUserKey(userk, serverK)
-	for x, _ := range u {
+	for x := range u {
 		src := []byte(p[x])
 		dst := make([]byte, hex.DecodedLen(len(src)))
 		n, err := hex.Decode(dst, src)

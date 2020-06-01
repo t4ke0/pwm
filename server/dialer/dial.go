@@ -1,5 +1,8 @@
 package dialer
 
+//TODO: don't send cookiename and it value , get the name and value from response header
+//TODO: add a go routine to send emails
+
 import (
 	"encoding/json"
 	"log"
@@ -23,35 +26,39 @@ type User struct {
 	CredList pwshow.UserList `json:"CredList"`
 }
 
-// CookieUser
+// CookieUser struct holds username of the current user in the session
 type CookieUser struct {
 	Username string `json:Username`
 }
 
-//Register
+//Register IsReg value is sent to inform that the user is successfully registred
 type Register struct {
 	IsReg bool `json:"IsReg"`
 }
 
+//Creds send Updated if the db is updated
 type Creds struct {
 	Updated bool `json:"Updated"`
 }
 
-//Login
+//Login login struct holds values that we need in the frontend to check if we have successfully logged in
 type Login struct {
 	IsLog       bool   `json:"IsLog"`
 	CookieName  string `json:"CookieName"`
 	CookieValue string `json:"CookieValue"`
 }
 
+//Token is the code that we send to the user to restore his password
 type Token struct {
 	Code string
 }
 
+//Password password struct holds a value which is Updated to inform the frontend that the user password is updated
 type Password struct {
 	Updated bool `json:"Updated"`
 }
 
+//Email has Response and IsEqual instances we need them in Password recovery process.
 type Email struct {
 	Response bool `json:"Response"`
 	IsEqual  bool `json:"IsEqual"`
@@ -129,7 +136,7 @@ func ServeLogin(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//CookieDecode
+//CookieDecode decode the cookie and get the username
 func CookieDecode(w http.ResponseWriter, r *http.Request) {
 	handleOption(w, r)
 	uname := authentication.GetUsername(r)
@@ -158,7 +165,7 @@ func ServeShow(w http.ResponseWriter, r *http.Request) {
 
 var t Token
 
-//TODO: add a go routine to send emails
+//ServepwForget function that handles password recovery process
 func ServepwForget(w http.ResponseWriter, r *http.Request) {
 	handleOption(w, r)
 	e := &Email{}
@@ -209,7 +216,7 @@ func ServepwForget(w http.ResponseWriter, r *http.Request) {
 
 var d pwshow.UserList
 
-func handleJsonBody(r *http.Request) error {
+func handleJSONBody(r *http.Request) error {
 	if r.Body != nil {
 		err := json.NewDecoder(r.Body).Decode(&d)
 		return err
@@ -217,10 +224,11 @@ func handleJsonBody(r *http.Request) error {
 	return nil
 }
 
+//ServeCreds update and delete User creds if the front-end credential has been changed
 func ServeCreds(w http.ResponseWriter, r *http.Request) {
 	handleOption(w, r)
 	username := authentication.GetUsername(r)
-	err := handleJsonBody(r)
+	err := handleJSONBody(r)
 	CheckError(err)
 	if username != "" && d != nil {
 		// 1st delete user creds

@@ -13,7 +13,6 @@ import (
 
 // AddCreds func saves user credentials to the Database
 // Load User encryption key and encrypt passwords then add them
-//TODO: accept username and pwshow.UserList as input then Loop through the list and add each row to the database .
 func AddCreds(user string, password string, category string, Cuser string) bool {
 	var isOk bool
 	db := sqlite.InitDb()

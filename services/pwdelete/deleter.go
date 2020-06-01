@@ -4,8 +4,7 @@ import (
 	"../../sqlite"
 )
 
-// This Func Deletes unwanted creds
-// TODO: userid instead of the id of the credentials here
+//DeleteCreds This Func Deletes unwanted creds
 func DeleteCreds(username string) bool {
 	var isOk bool
 	db := sqlite.InitDb()

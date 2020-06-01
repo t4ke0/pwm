@@ -77,6 +77,7 @@ func CheckForUser(user string, db *sql.DB) int {
 	return len(users)
 }
 
+//CheckForMail check if mail already exist
 func CheckForMail(email string, db *sql.DB) bool {
 	rows, err := db.Query("SELECT email FROM users")
 	checkError(err)
@@ -262,6 +263,7 @@ func Update(id int, db *sql.DB, args ...string) []int {
 	return ff
 }
 
+//UpdatePw update user's login password
 func UpdatePw(password, email string, db *sql.DB) bool {
 	h := sha256.New()
 	h.Write([]byte(password))

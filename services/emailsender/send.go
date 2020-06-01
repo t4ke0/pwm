@@ -5,6 +5,7 @@ import (
 	"os"
 )
 
+//EmailInfo struct holds email info
 type EmailInfo struct {
 	from       string
 	msg        []byte
@@ -18,11 +19,13 @@ var (
 	port      string = ":587"
 )
 
+//EmailAuth email authentication
 func EmailAuth() smtp.Auth {
 	auth := smtp.PlainAuth("", emailaddr, password, hostname)
 	return auth
 }
 
+//SendCode sending code that we generate to the user
 func SendCode(msg, email string) (bool, error) {
 	info := &EmailInfo{}
 	info.from, info.msg, info.recipients = "pwm.noreply", []byte(msg), []string{email}
@@ -30,7 +33,6 @@ func SendCode(msg, email string) (bool, error) {
 	err := smtp.SendMail(hostname+port, auth, info.from, info.recipients, info.msg)
 	if err != nil {
 		return false, err
-	} else {
-		return true, nil
 	}
+	return true, nil
 }
