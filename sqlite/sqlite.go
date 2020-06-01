@@ -296,16 +296,27 @@ func Save(user string, passwd string, category string, uid int, db *sql.DB) bool
 
 //Delete deletes credetials
 //Replace id in the input with userid
-func Delete(uid int, db *sql.DB) bool {
-	defer db.Close()
-
-	stmt, err := db.Prepare("DELETE FROM passwords WHERE userid = ?")
-	stmt.Exec(uid)
+func Delete(uid int, category string, db *sql.DB) bool {
 	var ok bool
-	if err != nil {
-		ok = false
-	} else {
-		ok = true
+	defer db.Close()
+	if category == "" && uid != 0 {
+		stmt, err := db.Prepare("DELETE FROM passwords WHERE userid = ?")
+		stmt.Exec(uid)
+		if err != nil {
+			checkError(err)
+			ok = false
+		} else {
+			ok = true
+		}
+	} else if category != "" && uid != 0 {
+		stmt, err := db.Prepare("DELETE FROM passwords WHERE category = ? AND userid = ? ")
+		stmt.Exec(category, uid)
+		if err != nil {
+			checkError(err)
+			ok = false
+		} else {
+			ok = true
+		}
 	}
 	return ok
 }

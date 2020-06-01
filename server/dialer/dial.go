@@ -2,6 +2,8 @@ package dialer
 
 //TODO: don't send cookiename and it value , get the name and value from response header
 //TODO: add a go routine to send emails
+//TODO: For cred update enable updating by category , So we need to delete only the category that the user has filtered then add the new creds to that particular,
+//			category.
 
 import (
 	"encoding/json"
@@ -29,6 +31,12 @@ type User struct {
 // CookieUser struct holds username of the current user in the session
 type CookieUser struct {
 	Username string `json:Username`
+}
+
+//UserData User's data or Credential
+type UserData struct {
+	Category   string          `json:"Category"`
+	Credential pwshow.UserList `json:"Credential"`
 }
 
 //Register IsReg value is sent to inform that the user is successfully registred
@@ -214,7 +222,7 @@ func ServepwForget(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var d pwshow.UserList
+var d UserData //pwshow.UserList
 
 func handleJSONBody(r *http.Request) error {
 	if r.Body != nil {
@@ -230,12 +238,12 @@ func ServeCreds(w http.ResponseWriter, r *http.Request) {
 	username := authentication.GetUsername(r)
 	err := handleJSONBody(r)
 	CheckError(err)
-	if username != "" && d != nil {
-		// 1st delete user creds
-		isDeleted := pwdelete.DeleteCreds(username)
+	if username != "" && d.Credential != nil {
+		//1st delete user creds
+		isDeleted := pwdelete.DeleteCreds(username, d.Category)
 		if isDeleted {
 			//Now we should update user creds Here
-			for _, n := range d {
+			for _, n := range d.Credential {
 				pwsaver.AddCreds(n.Username, n.Password, n.Category, username)
 			}
 			c := &Creds{Updated: true}
