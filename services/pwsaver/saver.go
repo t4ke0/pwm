@@ -26,7 +26,6 @@ func AddCreds(user string, password string, category string, Cuser string) bool 
 	serverK := pwencrypter.LoadKey("server")
 	// Decrypt user key for encrypting his password
 	decKey := serverenc.DecryptUserKey(key, serverK)
-	//TODO: add loop here
 	Epw := pwencrypter.Encrypt(password, decKey)
 	hexenc := make([]byte, hex.EncodedLen(len(Epw)))
 	hex.Encode(hexenc, Epw)
