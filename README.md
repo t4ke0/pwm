@@ -1,18 +1,24 @@
 
 
-## TEST PROJECT for learning Go lang
 
-## Roadmap
+## SO FAR 
+```
+[+] Register & login 
+[+] generating encryption key for the user for encrypting and decrypting credentials 
+[+] Save & Show User Credentials 
+[+] Generating an encryption key for the server when starting the launcher for the first time , in case the launcher have found the server key it skips this phase 
+[+] Decypting user's key in case he need ot show , add or update his credentials
+[+] Support REST API with JSON
 
-- [ ] prevent clear text password beeing seen (ssl-proxy, os/exec, ...)
-- [ ] fix error coverage
-- [ ] complete roadmap
+```
 
-## Quick Setup and Run 
+
+
+## Trying the Code [developping mode]
 
 ```sh
-
+git checkout develop
 go get 
-go run main.go
+go run launcher
 
 ```

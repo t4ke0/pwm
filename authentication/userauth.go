@@ -1,0 +1,74 @@
+package authentication
+
+import (
+	"database/sql"
+
+	"../sqlite"
+)
+
+// DB const variable indicates the path of the sqlite3 file
+const DB string = "./server/database.db"
+
+// Register Saves New Users into Sqlite DB
+func Register(username string, password string, email string) bool {
+	db, err := sql.Open("sqlite3", DB)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+
+	var ok bool
+	reg := sqlite.Register(username, password, email, db)
+	if reg == 0 {
+		ok = true
+	} else {
+		ok = false
+	}
+	return ok
+}
+
+// Login Checks if the username and password entered are the same as others in the DB
+func Login(username string, password string) bool {
+	db, err := sql.Open("sqlite3", DB)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+
+	var ok bool
+	reg := sqlite.Login(username, password, db)
+	if reg {
+		ok = true
+	} else {
+		ok = false
+	}
+	return ok
+}
+
+//CheckMail check if mail is already exist in our db
+func CheckMail(email string) bool {
+	db, err := sql.Open("sqlite3", DB)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+	var ok bool
+	exist := sqlite.CheckForMail(email, db)
+	if exist {
+		ok = true
+	} else {
+		ok = false
+	}
+	return ok
+}
+
+//UpdatePassword update user password
+func UpdatePassword(email, password string) bool {
+	db, err := sql.Open("sqlite3", DB)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+	isUpdated := sqlite.UpdatePw(password, email, db)
+	return isUpdated
+}
