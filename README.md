@@ -1,7 +1,7 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/TaKeO90/pwm)](https://goreportcard.com/report/github.com/TaKeO90/pwm)
 
-# SO FAR 
+# SO FAR || ROADMAP
 ```
 [+] Register & login 
 [+] generating encryption key for the user for encrypting and decrypting credentials 
