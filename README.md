@@ -1,7 +1,7 @@
 
 
 
-## SO FAR 
+# SO FAR 
 ```
 [+] Register & login 
 [+] generating encryption key for the user for encrypting and decrypting credentials 
@@ -14,10 +14,9 @@
 
 
 
-## Trying the Code [developping mode]
+# Usage
 
 ```sh
-git checkout develop
 go get 
 go run launcher
 
