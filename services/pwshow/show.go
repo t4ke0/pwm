@@ -12,7 +12,6 @@ import (
 
 // UserStuff a struct which it field holds user credential fields
 type UserStuff struct {
-	Id       string
 	Username string
 	Password string
 	Category string
@@ -27,7 +26,7 @@ var (
 
 // Add Creds To the FinalList
 // Load User Encryption Key and decrypt passwrds
-func AddToList(i []string, u []string, p []string, c []string, user string) UserList {
+func AddToList(u []string, p []string, c []string, user string) UserList {
 	//Clear the FinalList Each Call
 	FinalList = FinalList[:0]
 	//	key := pwencrypter.LoadKey(user)
@@ -40,14 +39,14 @@ func AddToList(i []string, u []string, p []string, c []string, user string) User
 	serverK := pwencrypter.LoadKey("server")
 	// Decrypt User Key
 	decKey := serverenc.DecryptUserKey(userk, serverK)
-	for x, _ := range i {
+	for x, _ := range u {
 		src := []byte(p[x])
 		dst := make([]byte, hex.DecodedLen(len(src)))
 		n, err := hex.Decode(dst, src)
 		if err != nil {
 			log.Fatal(err)
 		}
-		U.Id, U.Username, U.Password, U.Category = i[x], u[x], pwencrypter.Decrypt(dst[:n], decKey), c[x]
+		U.Username, U.Password, U.Category = u[x], pwencrypter.Decrypt(dst[:n], decKey), c[x]
 		FinalList = append(FinalList, U)
 	}
 	return FinalList
@@ -59,11 +58,11 @@ func ShowCreds(user string, category string) UserList {
 	db := sqlite.InitDb()
 	uid := sqlite.GetUID(user, db)
 	if category != "" {
-		i, u, p, c := sqlite.GetStuff(uid, category, db)
-		Fl = AddToList(i, u, p, c, user)
+		_, u, p, c := sqlite.GetStuff(uid, category, db)
+		Fl = AddToList(u, p, c, user)
 	} else {
-		i, u, p, c := sqlite.GetStuff(uid, category, db)
-		Fl = AddToList(i, u, p, c, user)
+		_, u, p, c := sqlite.GetStuff(uid, category, db)
+		Fl = AddToList(u, p, c, user)
 	}
 	return Fl
 }

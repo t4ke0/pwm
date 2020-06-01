@@ -1,17 +1,19 @@
 package pwsaver
 
 import (
-	"../../sqlite"
-	"../pwencrypter"
-	"../serverenc"
 	"encoding/hex"
 	"io/ioutil"
 	"log"
 	"path"
+
+	"../../sqlite"
+	"../pwencrypter"
+	"../serverenc"
 )
 
 // AddCreds func saves user credentials to the Database
-// Load User encryption key and encrpyt passwords then add them
+// Load User encryption key and encrypt passwords then add them
+//TODO: accept username and pwshow.UserList as input then Loop through the list and add each row to the database .
 func AddCreds(user string, password string, category string, Cuser string) bool {
 	var isOk bool
 	db := sqlite.InitDb()
@@ -25,6 +27,7 @@ func AddCreds(user string, password string, category string, Cuser string) bool 
 	serverK := pwencrypter.LoadKey("server")
 	// Decrypt user key for encrypting his password
 	decKey := serverenc.DecryptUserKey(key, serverK)
+	//TODO: add loop here
 	Epw := pwencrypter.Encrypt(password, decKey)
 	hexenc := make([]byte, hex.EncodedLen(len(Epw)))
 	hex.Encode(hexenc, Epw)

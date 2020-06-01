@@ -5,10 +5,12 @@ import (
 )
 
 // This Func Deletes unwanted creds
-func DeleteCreds(id int) bool {
+// TODO: userid instead of the id of the credentials here
+func DeleteCreds(username string) bool {
 	var isOk bool
 	db := sqlite.InitDb()
-	if ok := sqlite.Delete(id, db); ok {
+	uid := sqlite.GetUID(username, db)
+	if ok := sqlite.Delete(uid, db); ok {
 		isOk = true
 	} else {
 		isOk = false

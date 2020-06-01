@@ -183,7 +183,6 @@ func GetStuff(uid int, category string, db *sql.DB) ([]string, []string, []strin
 			}
 		}
 		rows.Close()
-		//		return i, u, p, c
 	} else if category != "" {
 		for rows.Next() {
 			err = rows.Scan(&pwid, &user, &passw, &catg, &userid)
@@ -196,7 +195,6 @@ func GetStuff(uid int, category string, db *sql.DB) ([]string, []string, []strin
 			}
 		}
 		rows.Close()
-		//		return i, u, p, c
 	}
 	return i, u, p, c
 }
@@ -294,12 +292,13 @@ func Save(user string, passwd string, category string, uid int, db *sql.DB) bool
 	return ok
 }
 
-//Delete delete credetials
-func Delete(id int, db *sql.DB) bool {
+//Delete deletes credetials
+//Replace id in the input with userid
+func Delete(uid int, db *sql.DB) bool {
 	defer db.Close()
 
-	stmt, err := db.Prepare("DELETE FROM passwords WHERE pwid = ?")
-	stmt.Exec(id)
+	stmt, err := db.Prepare("DELETE FROM passwords WHERE userid = ?")
+	stmt.Exec(uid)
 	var ok bool
 	if err != nil {
 		ok = false

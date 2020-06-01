@@ -19,16 +19,12 @@ func ReqHandler(w http.ResponseWriter, r *http.Request) {
 		dialer.ServeRegister(w, r)
 	case "user":
 		dialer.CookieDecode(w, r)
-	case "add":
-		dialer.ServeAdd(w, r)
 	case "show":
 		dialer.ServeShow(w, r)
-	case "update":
-		dialer.ServeUpdate(w, r)
-	case "delete":
-		dialer.ServeDelete(w, r)
 	case "forgot":
 		dialer.ServepwForget(w, r)
+	case "creds":
+		dialer.ServeCreds(w, r)
 	default:
 		fmt.Fprintf(w, "404 Not Found", http.StatusNotFound)
 	}

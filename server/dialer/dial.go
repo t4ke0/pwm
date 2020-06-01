@@ -15,15 +15,11 @@ import (
 	"../../services/pwdelete"
 	"../../services/pwsaver"
 	"../../services/pwshow"
-	"../../services/pwupdate"
 )
 
 // User Struct
 type User struct {
-	Username string          `json:"Username"`
-	Ok       bool            `json:"Ok"`
 	IsEmpty  bool            `json:"isEmpty"`
-	Updated  bool            `json:"Updated"`
 	CredList pwshow.UserList `json:"CredList"`
 }
 
@@ -35,6 +31,10 @@ type CookieUser struct {
 //Register
 type Register struct {
 	IsReg bool `json:"IsReg"`
+}
+
+type Creds struct {
+	Updated bool `json:"Updated"`
 }
 
 //Login
@@ -156,83 +156,9 @@ func ServeShow(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// ServeUpdate Get item that Should be updated then sent them to Update service
-func ServeUpdate(w http.ResponseWriter, r *http.Request) {
-	handleOption(w, r)
-	u := &User{}
-	if cookie := authentication.CheckCookie(r); cookie {
-		username := authentication.GetUsername(r)
-		u.Updated = false
-		if f := HandlePost(r); len(f) != 0 {
-			id := strings.Join(f["id"], "")
-			user := strings.Join(f["user"], "")
-			password := strings.Join(f["passw"], "")
-			category := strings.Join(f["catg"], "")
-			iid, err := strconv.Atoi(id)
-			CheckError(err)
-			m := pwupdate.UpdateCreds(iid, username, user, password, category)
-			if m["user"] == true {
-				u.Updated = true
-			} else if m["password"] == true {
-				u.Updated = true
-			} else if m["category"] == true {
-				u.Updated = true
-			}
-			json.NewEncoder(w).Encode(u)
-		}
-	} else {
-		u.Updated = false
-		json.NewEncoder(w).Encode(u)
-	}
-}
-
-// ServeAdd Get items that should be added and send them to the save credential service to save them
-func ServeAdd(w http.ResponseWriter, r *http.Request) {
-	handleOption(w, r)
-	u := &User{}
-	if cookie := authentication.CheckCookie(r); cookie {
-		Tuser := authentication.GetUsername(r)
-		u.Username = Tuser
-		u.Ok = false
-		// handling the post request
-		if f := HandlePost(r); len(f) != 0 {
-			username := strings.Join(f["user"], "")
-			passw := strings.Join(f["passw"], "")
-			category := strings.Join(f["category"], "")
-			if IsSaved := pwsaver.AddCreds(username, passw, category, Tuser); IsSaved {
-				u.Ok = true
-				json.NewEncoder(w).Encode(u)
-			}
-		}
-	} else {
-		u.Ok = false
-		json.NewEncoder(w).Encode(u)
-	}
-}
-
-// ServeDelete Get the id number of the cred that should be deleted and send them to the delete service
-func ServeDelete(w http.ResponseWriter, r *http.Request) {
-	handleOption(w, r)
-	u := &User{}
-	if cookie := authentication.CheckCookie(r); cookie {
-		u.Ok = false
-		if f := HandlePost(r); len(f) != 0 {
-			id, err := strconv.Atoi(strings.Join(f["id"], ""))
-			CheckError(err)
-			if isDeleted := pwdelete.DeleteCreds(id); isDeleted {
-				u.Ok = true
-				json.NewEncoder(w).Encode(u)
-			}
-		}
-	} else {
-		u.Ok = false
-		json.NewEncoder(w).Encode(u)
-	}
-}
-
 var t Token
 
-//TODO: add a coroutine to send emails
+//TODO: add a go routine to send emails
 func ServepwForget(w http.ResponseWriter, r *http.Request) {
 	handleOption(w, r)
 	e := &Email{}
@@ -277,6 +203,35 @@ func ServepwForget(w http.ResponseWriter, r *http.Request) {
 				p.Updated = false
 				json.NewEncoder(w).Encode(p)
 			}
+		}
+	}
+}
+
+var d pwshow.UserList
+
+func handleJsonBody(r *http.Request) error {
+	if r.Body != nil {
+		err := json.NewDecoder(r.Body).Decode(&d)
+		return err
+	}
+	return nil
+}
+
+func ServeCreds(w http.ResponseWriter, r *http.Request) {
+	handleOption(w, r)
+	username := authentication.GetUsername(r)
+	err := handleJsonBody(r)
+	CheckError(err)
+	if username != "" && d != nil {
+		// 1st delete user creds
+		isDeleted := pwdelete.DeleteCreds(username)
+		if isDeleted {
+			//Now we should update user creds Here
+			for _, n := range d {
+				pwsaver.AddCreds(n.Username, n.Password, n.Category, username)
+			}
+			c := &Creds{Updated: true}
+			json.NewEncoder(w).Encode(c)
 		}
 	}
 }
