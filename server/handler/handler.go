@@ -25,6 +25,10 @@ func ReqHandler(w http.ResponseWriter, r *http.Request) {
 		dialer.ServepwForget(w, r)
 	case "creds":
 		dialer.ServeCreds(w, r)
+	case "logout":
+		dialer.GetLogout(w, r)
+	case "upload":
+		dialer.UploadCredFile(w, r)
 	default:
 		fmt.Fprintf(w, "404 Not Found", http.StatusNotFound)
 	}

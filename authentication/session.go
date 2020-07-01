@@ -17,14 +17,14 @@ const sessionCookie = "session"
 // SetSession function takes username and the http response Writer as inputs
 // Then Encode User's username and use it as a session cookie
 // finally sets the cookie for the user otherwise it returns an error
-func SetSession(username string, w http.ResponseWriter) (*http.Cookie, error) {
+func SetSession(username string, w http.ResponseWriter) error {
 	value := map[string]string{
 		"name": username,
 	}
 	var err error
 	encoded, err := cookieHandler.Encode(sessionCookie, value)
 	if err != nil {
-		return &http.Cookie{}, err
+		return err
 	}
 	cookie := &http.Cookie{
 		Name:   sessionCookie,
@@ -33,7 +33,7 @@ func SetSession(username string, w http.ResponseWriter) (*http.Cookie, error) {
 		MaxAge: 3600,
 	}
 	http.SetCookie(w, cookie)
-	return cookie, nil
+	return nil
 }
 
 //GetCookieValue From *http.request get the Cookie if available

@@ -8,6 +8,7 @@ import (
 
 	"../../sqlite"
 	"../pwencrypter"
+	"../pwshow"
 	"../serverenc"
 )
 
@@ -35,4 +36,13 @@ func AddCreds(user string, password string, category string, Cuser string) bool 
 		isOk = false
 	}
 	return isOk
+}
+
+//ParseAndAdd loop through UserList type and save credentials
+func ParseAndAdd(credList pwshow.UserList, username string) bool {
+	var svOk bool
+	for _, n := range credList {
+		svOk = AddCreds(n.Username, n.Password, n.Category, username)
+	}
+	return svOk
 }

@@ -1,15 +1,16 @@
 package dialer
 
-//TODO: don't send cookiename and it value , get the name and value from response header
 //TODO: add a go routine to send emails
-//TODO: For cred update enable updating by category , So we need to delete only the category that the user has filtered then add the new creds to that particular,
-//			category.
+//TODO: compare data then add just the diffrent creds to the db for "/creds"
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"log"
 	"math/rand"
+	"mime/multipart"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -20,6 +21,8 @@ import (
 	"../../services/pwdelete"
 	"../../services/pwsaver"
 	"../../services/pwshow"
+	"../../services/pwupdater"
+	"../../services/readcredfile"
 )
 
 // User Struct
@@ -39,6 +42,12 @@ type UserData struct {
 	Credential pwshow.UserList `json:"Credential"`
 }
 
+//FileUploaded struct holds informations about how success is the process of uploading credential file
+type FileUploaded struct {
+	Lines   []int `json:"Lines"`
+	Success bool  `json:"Success"`
+}
+
 //Register IsReg value is sent to inform that the user is successfully registred
 type Register struct {
 	IsReg bool `json:"IsReg"`
@@ -51,9 +60,12 @@ type Creds struct {
 
 //Login login struct holds values that we need in the frontend to check if we have successfully logged in
 type Login struct {
-	IsLog       bool   `json:"IsLog"`
-	CookieName  string `json:"CookieName"`
-	CookieValue string `json:"CookieValue"`
+	IsLog bool `json:"IsLog"`
+}
+
+//Logout holds a bool value to indicate which the user is logged out or not
+type Logout struct {
+	IsLogout bool `json:"IsLogout"`
 }
 
 //Token is the code that we send to the user to restore his password
@@ -84,12 +96,64 @@ func HandlePost(r *http.Request) map[string][]string {
 	return m
 }
 
+func handleFilePost(r *http.Request) (multipart.File, *multipart.FileHeader, error) {
+	if r.Method == "POST" {
+		r.ParseMultipartForm(30)
+		file, handler, err := r.FormFile("myfile")
+		if err != nil {
+			return nil, nil, err
+		}
+		return file, handler, nil
+	}
+	return nil, nil, nil
+}
+
+//UploadCredFile handle uploading csv file here
+func UploadCredFile(w http.ResponseWriter, r *http.Request) {
+	handleOption(w, r)
+	u := &FileUploaded{}
+	user := authentication.GetUsername(r)
+	file, handler, err := handleFilePost(r)
+	defer file.Close()
+	CheckError(err)
+	if user != "" && handler != nil && filepath.Ext(handler.Filename) == ".csv" {
+		filebyte, err := ioutil.ReadAll(file)
+		CheckError(err)
+		n := readcredfile.New(filebyte)
+		var dump readcredfile.DumpCreds = n
+		dumpedData := dump.ExtractCreds()
+		if len(dumpedData) != 0 {
+			line, ok := dumpedData.Compare(user)
+			if ok {
+				u.Lines = line
+				u.Success = false
+				json.NewEncoder(w).Encode(u)
+			} else if ok == false && len(line) == 0 {
+				var saved bool
+				for _, i := range dumpedData {
+					saved = pwsaver.AddCreds(i.Username, i.Password, i.Category, user)
+				}
+				if saved {
+					u.Lines = line
+					u.Success = true
+					json.NewEncoder(w).Encode(u)
+				}
+			} else {
+				u.Success = false
+				json.NewEncoder(w).Encode(u)
+			}
+		} else {
+			u.Success = false
+			json.NewEncoder(w).Encode(u)
+		}
+	}
+}
+
 func setupResponse(w *http.ResponseWriter, r *http.Request) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "http://localhost:5000")
 	(*w).Header().Set("Access-Control-Allow-Methods", "POST,GET")
 	(*w).Header().Set("Access-Control-Allow-Credentials", "true")
-	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-	(*w).Header().Set("Access-Control-Expose-Headers", "Set-Cookie") // Not Working TOBE removed
+	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length,Set-Cookie , Accept-Encoding, X-CSRF-Token, Authorization")
 	(*w).Header().Set("Content-Type", "application/json")
 }
 
@@ -132,9 +196,10 @@ func ServeLogin(w http.ResponseWriter, r *http.Request) {
 		user := strings.Join(f["user"], "")
 		password := strings.Join(f["passw"], "")
 		logg := &Login{}
-		if cookie, ok := identityprovider.GetLoggedin(w, r, user, password); ok {
-			logg.CookieName = cookie.Name
-			logg.CookieValue = cookie.Value
+		if ok, err := identityprovider.GetLoggedin(w, r, user, password); ok {
+			if err != nil {
+				log.Fatal(err)
+			}
 			logg.IsLog = true
 			json.NewEncoder(w).Encode(logg)
 		} else {
@@ -150,6 +215,19 @@ func CookieDecode(w http.ResponseWriter, r *http.Request) {
 	uname := authentication.GetUsername(r)
 	c := &CookieUser{uname}
 	json.NewEncoder(w).Encode(c)
+}
+
+//GetLogout logout the user by clearing the cookie value
+func GetLogout(w http.ResponseWriter, r *http.Request) {
+	handleOption(w, r)
+	logout := &Logout{}
+	if ok := identityprovider.GetLoggedout(w, r); ok {
+		logout.IsLogout = ok
+		json.NewEncoder(w).Encode(logout)
+	} else {
+		logout.IsLogout = ok
+		json.NewEncoder(w).Encode(logout)
+	}
 }
 
 // ServeShow Show User credentials
@@ -239,15 +317,33 @@ func ServeCreds(w http.ResponseWriter, r *http.Request) {
 	err := handleJSONBody(r)
 	CheckError(err)
 	if username != "" && d.Credential != nil {
-		//1st delete user creds
-		isDeleted := pwdelete.DeleteCreds(username, d.Category)
-		if isDeleted {
-			//Now we should update user creds Here
-			for _, n := range d.Credential {
-				pwsaver.AddCreds(n.Username, n.Password, n.Category, username)
-			}
-			c := &Creds{Updated: true}
+		updateM, addL, delL, isCtg := pwshow.Compare(d.Credential, d.Category)
+		if len(updateM) != 0 && isCtg {
+			cl := pwupdater.ParseMap(updateM, true)
+			ok, err := cl.UpdateCreds(username)
+			CheckError(err)
+			c := &Creds{Updated: ok}
+			json.NewEncoder(w).Encode(c)
+		} else if len(updateM) != 0 && !isCtg {
+			cl := pwupdater.ParseMap(updateM, false)
+			ok, err := cl.UpdateCreds(username)
+			CheckError(err)
+			c := &Creds{Updated: ok}
 			json.NewEncoder(w).Encode(c)
 		}
+		if len(addL) != 0 {
+			ok := pwsaver.ParseAndAdd(addL, username)
+			c := &Creds{Updated: ok}
+			json.NewEncoder(w).Encode(c)
+		}
+		if len(delL) != 0 {
+			ok, err := pwdelete.DeleteCreds(delL, isCtg)
+			CheckError(err)
+			c := &Creds{Updated: ok}
+			json.NewEncoder(w).Encode(c)
+		}
+	} else {
+		c := &Creds{Updated: false}
+		json.NewEncoder(w).Encode(c)
 	}
 }

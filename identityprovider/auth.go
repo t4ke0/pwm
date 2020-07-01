@@ -1,7 +1,6 @@
 package identityprovider
 
 import (
-	"log"
 	"net/http"
 
 	"../authentication"
@@ -10,24 +9,22 @@ import (
 )
 
 // GetLoggedin Login the User & give him an identity (Cookie)
-func GetLoggedin(w http.ResponseWriter, r *http.Request, user string, password string) (*http.Cookie, bool) {
+func GetLoggedin(w http.ResponseWriter, r *http.Request, user string, password string) (bool, error) {
 	var rr bool
-	var cok *http.Cookie
 	if ok := authentication.CheckCookie(r); ok {
 		rr = false
 	} else {
 		if logged := authentication.Login(user, password); logged {
-			cookie, err := authentication.SetSession(user, w)
+			err := authentication.SetSession(user, w)
 			if err != nil {
-				log.Fatal(err)
+				return false, err
 			}
-			cok = cookie
 			rr = true
 		} else {
 			rr = false
 		}
 	}
-	return cok, rr
+	return rr, nil
 }
 
 // GetRegister Register the User (Function takes http request ,user , password and email as input and returns a bool)

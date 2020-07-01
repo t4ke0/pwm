@@ -155,6 +155,30 @@ func Login(user string, passw string, db *sql.DB) bool {
 	return result
 }
 
+func CompareCreds(uid int, username, password, category string, db *sql.DB) (string, string) {
+	var user, passw, catg string
+	var userid int
+	rows, err := db.Query("SELECT userid,user,passw,category FROM passwords")
+	checkError(err)
+	for rows.Next() {
+		err = rows.Scan(&userid, &user, &passw, &catg)
+		checkError(err)
+		if userid == uid && category != "" {
+			if category == catg {
+				if user != username && passw != password {
+					return user, passw
+				}
+			}
+		} else if userid == uid && category == "" {
+			if user != username && passw != password {
+				return user, passw
+			}
+		}
+	}
+	rows.Close()
+	return "", ""
+}
+
 // GetStuff get user credentials from db
 func GetStuff(uid int, category string, db *sql.DB) ([]string, []string, []string, []string) {
 
@@ -223,44 +247,36 @@ func GetUID(user string, db *sql.DB) int {
 }
 
 // Update update credentials
-// TODO: UPdate this Function to a nicer version note: use initialized values instead of args
-func Update(id int, db *sql.DB, args ...string) []int {
+func Update(id int, db *sql.DB, args ...string) (bool, bool, bool) {
 
 	defer db.Close()
-	var f int
-	var f0 int
-	var f1 int
-	var ff []int
+	var (
+		uOk bool
+		pOk bool
+		cOk bool
+	)
 
 	for i := range args {
 		if id != 0 && args[i] != "" && i == 0 {
 			stmt, err := db.Prepare("UPDATE passwords SET user=? WHERE pwid = ?")
 			checkError(err)
 			stmt.Exec(args[i], id)
-			f = 1
-			ff = append(ff, f)
+			uOk = true
 
 		} else if id != 0 && args[i] != "" && i == 1 {
 			stmt, err := db.Prepare("UPDATE passwords SET passw=? WHERE pwid = ?")
 			checkError(err)
 			stmt.Exec(args[i], id)
-			f0 = 1
-			ff = append(ff, f0)
+			pOk = true
 
 		} else if id != 0 && args[i] != "" && i == 2 {
 			stmt, err := db.Prepare("UPDATE passwords SET category=? WHERE pwid = ?")
 			checkError(err)
 			stmt.Exec(args[i], id)
-			f1 = 1
-			ff = append(ff, f1)
-
-		} else {
-			f = 0
-			ff = append(ff, f)
-
+			cOk = true
 		}
 	}
-	return ff
+	return uOk, pOk, cOk
 }
 
 //UpdatePw update user's login password
@@ -296,27 +312,22 @@ func Save(user string, passwd string, category string, uid int, db *sql.DB) bool
 
 //Delete deletes credetials
 //Replace id in the input with userid
-func Delete(uid int, category string, db *sql.DB) bool {
-	var ok bool
+func Delete(pwid int, category string, db *sql.DB) (bool, error) {
 	defer db.Close()
-	if category == "" && uid != 0 {
-		stmt, err := db.Prepare("DELETE FROM passwords WHERE userid = ?")
-		stmt.Exec(uid)
+	if category == "" && pwid != 0 {
+		stmt, err := db.Prepare("DELETE FROM passwords WHERE pwid = ?")
+		stmt.Exec(pwid)
 		if err != nil {
-			checkError(err)
-			ok = false
-		} else {
-			ok = true
+			return false, err
 		}
-	} else if category != "" && uid != 0 {
-		stmt, err := db.Prepare("DELETE FROM passwords WHERE category = ? AND userid = ? ")
-		stmt.Exec(category, uid)
+		return true, nil
+	} else if category != "" && pwid != 0 {
+		stmt, err := db.Prepare("DELETE FROM passwords WHERE pwid = ? AND category = ?")
+		stmt.Exec(pwid, category)
 		if err != nil {
-			checkError(err)
-			ok = false
-		} else {
-			ok = true
+			return false, err
 		}
+		return true, nil
 	}
-	return ok
+	return false, nil
 }

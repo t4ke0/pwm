@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"io/ioutil"
 	"log"
+	"path"
 
 	"../pwencrypter"
 )
@@ -78,4 +79,33 @@ func DecryptUserKey(userkey, key []byte) []byte {
 	n, err := hex.Decode(hexdec, []byte(decK))
 	CheckError(err)
 	return hexdec[:n]
+}
+
+//CredReveal Encrypt or Decrypt user's passwords
+func CredReveal(username, password, decPW string, enc bool) (string, error) {
+	key, err := ioutil.ReadFile(path.Join(KeysDir, username+".key"))
+	if err != nil {
+		return "", err
+	}
+	//Load server key
+	serverK := pwencrypter.LoadKey("server")
+	decKey := DecryptUserKey(key, serverK)
+	if enc && password != "" {
+		// Decrypt user key for encrypting his password
+		Epw := pwencrypter.Encrypt(password, decKey)
+		hexenc := make([]byte, hex.EncodedLen(len(Epw)))
+		hex.Encode(hexenc, Epw)
+		pwH := string(hexenc)
+		return pwH, nil
+	} else if !enc && decPW != "" {
+		src := []byte(decPW)
+		dst := make([]byte, hex.DecodedLen(len(src)))
+		n, err := hex.Decode(dst, src)
+		if err != nil {
+			return "", err
+		}
+		pwH := pwencrypter.Decrypt(dst[:n], decKey)
+		return pwH, nil
+	}
+	return "", nil
 }

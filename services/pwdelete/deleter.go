@@ -1,28 +1,31 @@
 package pwdelete
 
-//TODO: support deleting by category
 import (
 	"../../sqlite"
+	"../pwshow"
 )
 
-//DeleteCreds This Func Deletes unwanted creds
-func DeleteCreds(username, category string) bool {
-	var isOk bool
+//DeleteCreds delete credentials
+func DeleteCreds(delList pwshow.UserList, isctg bool) (bool, error) {
 	db := sqlite.InitDb()
-	if username != "" && category == "" {
-		uid := sqlite.GetUID(username, db)
-		if ok := sqlite.Delete(uid, category, db); ok {
-			isOk = true
-		} else {
-			isOk = false
+	for _, n := range delList {
+		pwid := pwshow.GetPWID(n.Username, n.Password, n.Category)
+		if isctg {
+			if ok, err := sqlite.Delete(pwid, n.Category, db); ok {
+				if err != nil {
+					return false, err
+				}
+				return true, nil
+			}
+			return false, nil
 		}
-	} else if category != "" && username != "" {
-		uid := sqlite.GetUID(username, db)
-		if ok := sqlite.Delete(uid, category, db); ok {
-			isOk = true
-		} else {
-			isOk = false
+		if ok, err := sqlite.Delete(pwid, "", db); ok {
+			if err != nil {
+				return false, nil
+			}
+			return true, nil
 		}
+		return false, nil
 	}
-	return isOk
+	return false, nil
 }
