@@ -6,9 +6,10 @@ import (
 	"log"
 	"path"
 
-	"../../sqlite"
-	"../pwencrypter"
-	"../serverenc"
+	"github.com/TaKeO90/pwm/services/pwencrypter"
+	"github.com/TaKeO90/pwm/services/pwshow"
+	"github.com/TaKeO90/pwm/services/serverenc"
+	"github.com/TaKeO90/pwm/sqlite"
 )
 
 // AddCreds func saves user credentials to the Database
@@ -35,4 +36,13 @@ func AddCreds(user string, password string, category string, Cuser string) bool 
 		isOk = false
 	}
 	return isOk
+}
+
+//ParseAndAdd loop through UserList type and save credentials
+func ParseAndAdd(credList pwshow.UserList, username string) bool {
+	var svOk bool
+	for _, n := range credList {
+		svOk = AddCreds(n.Username, n.Password, n.Category, username)
+	}
+	return svOk
 }
