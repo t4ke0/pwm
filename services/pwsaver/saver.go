@@ -6,10 +6,10 @@ import (
 	"log"
 	"path"
 
-	"../../sqlite"
-	"../pwencrypter"
-	"../pwshow"
-	"../serverenc"
+	"github.com/TaKeO90/pwm/services/pwencrypter"
+	"github.com/TaKeO90/pwm/services/pwshow"
+	"github.com/TaKeO90/pwm/services/serverenc"
+	"github.com/TaKeO90/pwm/sqlite"
 )
 
 // AddCreds func saves user credentials to the Database

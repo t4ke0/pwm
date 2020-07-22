@@ -1,7 +1,7 @@
 package readcredfile
 
 import (
-	"../pwshow"
+	"github.com/TaKeO90/pwm/services/pwshow"
 	"strings"
 )
 

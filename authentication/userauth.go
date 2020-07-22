@@ -3,7 +3,7 @@ package authentication
 import (
 	"database/sql"
 
-	"../sqlite"
+	"github.com/TaKeO90/pwm/sqlite"
 )
 
 // DB const variable indicates the path of the sqlite3 file

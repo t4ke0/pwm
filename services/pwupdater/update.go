@@ -1,9 +1,9 @@
 package pwupdater
 
 import (
-	"../../sqlite"
-	"../pwshow"
-	"../serverenc"
+	"github.com/TaKeO90/pwm/services/pwshow"
+	"github.com/TaKeO90/pwm/services/serverenc"
+	"github.com/TaKeO90/pwm/sqlite"
 )
 
 //CredsUpdate struct holds pwid of the credentials and credentials

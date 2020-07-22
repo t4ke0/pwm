@@ -15,14 +15,15 @@ import (
 	"strings"
 	"time"
 
-	"../../authentication"
-	"../../identityprovider"
-	"../../services/emailsender"
-	"../../services/pwdelete"
-	"../../services/pwsaver"
-	"../../services/pwshow"
-	"../../services/pwupdater"
-	"../../services/readcredfile"
+	"github.com/TaKeO90/pwm/authentication"
+	"github.com/TaKeO90/pwm/identityprovider"
+	"github.com/TaKeO90/pwm/services/emailsender"
+	"github.com/TaKeO90/pwm/services/genpassw"
+	"github.com/TaKeO90/pwm/services/pwdelete"
+	"github.com/TaKeO90/pwm/services/pwsaver"
+	"github.com/TaKeO90/pwm/services/pwshow"
+	"github.com/TaKeO90/pwm/services/pwupdater"
+	"github.com/TaKeO90/pwm/services/readcredfile"
 )
 
 // User Struct
@@ -82,6 +83,10 @@ type Password struct {
 type Email struct {
 	Response bool `json:"Response"`
 	IsEqual  bool `json:"IsEqual"`
+}
+
+type GenPassword struct {
+	Value string
 }
 
 // HandlePost function handles Post http method
@@ -345,5 +350,36 @@ func ServeCreds(w http.ResponseWriter, r *http.Request) {
 	} else {
 		c := &Creds{Updated: false}
 		json.NewEncoder(w).Encode(c)
+	}
+}
+
+func ServeGenPw(w http.ResponseWriter, r *http.Request) {
+	handleOption(w, r)
+	g := &GenPassword{}
+	if postF := HandlePost(r); len(postF) != 0 {
+		var genP genpassw.PwType
+		pwType := strings.Join(postF["type"], "")
+		length := strings.Join(postF["length"], "")
+		if pwType != "" && length != "" {
+			l, err := strconv.Atoi(length)
+			if err != nil {
+				log.Fatal(err)
+			}
+			pw := genpassw.New(l)
+			genP = pw
+			switch pwType {
+			case "character":
+				g.Value = strings.TrimSpace(genP.GenerateChars())
+			case "integer":
+				g.Value = strings.TrimSpace(genP.GenerateInts())
+			case "special":
+				g.Value = strings.TrimSpace(genP.GenerateSpchars())
+			case "mix":
+				g.Value = strings.TrimSpace(genP.GenerateComplex())
+			}
+			json.NewEncoder(w).Encode(g)
+		} else {
+			json.NewEncoder(w).Encode(g)
+		}
 	}
 }

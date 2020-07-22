@@ -1,8 +1,8 @@
 package pwdelete
 
 import (
-	"../../sqlite"
-	"../pwshow"
+	"github.com/TaKeO90/pwm/services/pwshow"
+	"github.com/TaKeO90/pwm/sqlite"
 )
 
 //DeleteCreds delete credentials

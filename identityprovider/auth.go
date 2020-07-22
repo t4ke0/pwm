@@ -3,9 +3,9 @@ package identityprovider
 import (
 	"net/http"
 
-	"../authentication"
-	"../services/pwencrypter"
-	"../services/serverenc"
+	"github.com/TaKeO90/pwm/authentication"
+	"github.com/TaKeO90/pwm/services/pwencrypter"
+	"github.com/TaKeO90/pwm/services/serverenc"
 )
 
 // GetLoggedin Login the User & give him an identity (Cookie)

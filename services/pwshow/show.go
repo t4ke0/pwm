@@ -1,14 +1,15 @@
 package pwshow
 
 import (
-	"../../sqlite"
-	"../pwencrypter"
-	"../serverenc"
 	"encoding/hex"
 	"io/ioutil"
 	"log"
 	"path"
 	"strconv"
+
+	"github.com/TaKeO90/pwm/services/pwencrypter"
+	"github.com/TaKeO90/pwm/services/serverenc"
+	"github.com/TaKeO90/pwm/sqlite"
 )
 
 // UserStuff a struct which it field holds user credential fields
@@ -68,7 +69,7 @@ func AddToList(i, u, p, c []string, user string) UserList {
 	return FinalList
 }
 
-//GetPWID get password ID
+// GetPWID get password ID
 func GetPWID(user, pw, catg string) int {
 	if len(compareList) != 0 {
 		for _, n := range compareList {
@@ -95,6 +96,12 @@ func ShowCreds(user string, category string) UserList {
 	return Fl
 }
 
+const (
+	isUpdate int = 0
+	isSave   int = 1
+	isDelete int = 2
+)
+
 //Compare compare front-end data and  back-end's
 func Compare(Flist UserList, category string) (map[UserStuff]UserStuff, UserList, UserList, bool) {
 	m := make(map[UserStuff]UserStuff)
@@ -103,19 +110,19 @@ func Compare(Flist UserList, category string) (map[UserStuff]UserStuff, UserList
 	var ctg bool
 	/* if length of the data in front-end equal to the data in backend */
 	if len(FinalList) == len(Flist) {
-		mm, _, isctg := oldVsNew(FinalList, Flist, category, 0)
+		mm, _, isctg := oldVsNew(FinalList, Flist, category, isUpdate)
 		m = mm
 		ctg = isctg
 
 		/* if length of front-end data is bigger than the data in the backend */
 	} else if len(FinalList) < len(Flist) {
 		Fl := Flist[:len(FinalList)]
-		mm, _, isctg := oldVsNew(FinalList, Fl, category, 0)
+		mm, _, isctg := oldVsNew(FinalList, Fl, category, isUpdate)
 		if mm != nil {
 			m = mm
 			ctg = isctg
 		}
-		_, add, isctg := oldVsNew(FinalList, Flist, category, 1)
+		_, add, isctg := oldVsNew(FinalList, Flist, category, isSave)
 		if add != nil {
 			save = add
 			ctg = isctg
@@ -124,7 +131,7 @@ func Compare(Flist UserList, category string) (map[UserStuff]UserStuff, UserList
 	} else if len(FinalList) > len(Flist) {
 		Fl := make(UserList, len(FinalList))
 		Fl = clone(Flist, Fl)
-		_, deleted, isctg := oldVsNew(FinalList, Fl, category, 2)
+		_, deleted, isctg := oldVsNew(FinalList, Fl, category, isDelete)
 		delt = deleted
 		ctg = isctg
 	}
@@ -144,14 +151,14 @@ func oldVsNew(old, New UserList, category string, mode int) (map[UserStuff]UserS
 	var Todelete UserList
 	var isCtg bool
 
-	if category == "" && mode == 0 {
+	if category == "" && mode == isUpdate {
 		for ind, n := range old {
 			if n.Username != New[ind].Username || n.Password != New[ind].Password || n.Category != New[ind].Category {
 				m[n] = New[ind]
 			}
 		}
 		return m, nil, false
-	} else if category != "" && mode == 0 {
+	} else if category != "" && mode == isUpdate {
 		for ind, n := range old {
 			if n.Username != New[ind].Username || n.Password != New[ind].Password && n.Category == category {
 				m[n] = New[ind]
@@ -159,7 +166,7 @@ func oldVsNew(old, New UserList, category string, mode int) (map[UserStuff]UserS
 			}
 		}
 		return m, nil, isCtg
-	} else if mode == 1 {
+	} else if mode == isSave {
 		lstElms := make(UserList, (len(New) - len(old)))
 		lstElms1 := clone(New[len(old):], lstElms)
 
@@ -204,7 +211,7 @@ func oldVsNew(old, New UserList, category string, mode int) (map[UserStuff]UserS
 			}
 		}
 		return nil, additional, isCtg
-	} else if mode == 2 {
+	} else if mode == isDelete {
 		if category == "" {
 			for index, n := range old {
 				if n.Username != New[index].Username || n.Password != New[index].Password || n.Category != New[index].Category {

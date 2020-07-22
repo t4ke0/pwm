@@ -4,6 +4,8 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"encoding/base32"
+	"fmt"
+	"log"
 
 	// _ blank for importing sqlite3 driver
 	_ "github.com/mattn/go-sqlite3"
@@ -15,7 +17,7 @@ const DB string = "./server/database.db"
 
 func checkError(err error) {
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 }
 
@@ -24,7 +26,8 @@ func InitDb() *sql.DB {
 	db, err := sql.Open("sqlite3", DB)
 	checkError(err)
 	if db == nil {
-		panic("db is nil")
+		err := fmt.Errorf("DB is Nil")
+		checkError(err)
 	}
 	return db
 }
@@ -75,6 +78,22 @@ func CheckForUser(user string, db *sql.DB) int {
 		}
 	}
 	return len(users)
+}
+
+//CountUsers Count the number of user that we have in the Database
+func CountUsers(db *sql.DB) (int, error) {
+	rows, err := db.Query("SELECT COUNT (*) FROM users;")
+	if err != nil {
+		return 0, err
+	}
+	var amount int
+	for rows.Next() {
+		err = rows.Scan(&amount)
+		if err != nil {
+			return 0, err
+		}
+	}
+	return amount, nil
 }
 
 //CheckForMail check if mail already exist
@@ -153,30 +172,6 @@ func Login(user string, passw string, db *sql.DB) bool {
 
 	rows.Close()
 	return result
-}
-
-func CompareCreds(uid int, username, password, category string, db *sql.DB) (string, string) {
-	var user, passw, catg string
-	var userid int
-	rows, err := db.Query("SELECT userid,user,passw,category FROM passwords")
-	checkError(err)
-	for rows.Next() {
-		err = rows.Scan(&userid, &user, &passw, &catg)
-		checkError(err)
-		if userid == uid && category != "" {
-			if category == catg {
-				if user != username && passw != password {
-					return user, passw
-				}
-			}
-		} else if userid == uid && category == "" {
-			if user != username && passw != password {
-				return user, passw
-			}
-		}
-	}
-	rows.Close()
-	return "", ""
 }
 
 // GetStuff get user credentials from db
@@ -310,8 +305,7 @@ func Save(user string, passwd string, category string, uid int, db *sql.DB) bool
 	return ok
 }
 
-//Delete deletes credetials
-//Replace id in the input with userid
+//Delete deletes credetials by providing password id or category
 func Delete(pwid int, category string, db *sql.DB) (bool, error) {
 	defer db.Close()
 	if category == "" && pwid != 0 {

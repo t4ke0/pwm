@@ -1,16 +1,17 @@
 package main
 
 import (
-	"./sqlite"
 	"fmt"
 	"log"
 	"os"
 	"os/exec"
+
+	"github.com/TaKeO90/pwm/server/genkey"
+	"github.com/TaKeO90/pwm/sqlite"
 )
 
 const (
-	mainf      string = "./server/main.go"
-	servergenk string = "./server/genkey/main.go"
+	mainf string = "./server/main.go"
 )
 
 func startProcess(args ...string) (p *os.Process, err error) {
@@ -33,13 +34,6 @@ func startServer() (p *os.Process) {
 	return nil
 }
 
-func checkServerKey() (p *os.Process) {
-	if p, err := startProcess("go", "run", servergenk); err == nil {
-		return p
-	}
-	return nil
-}
-
 func initDatabase() {
 	db := sqlite.InitDb()
 	_, err := sqlite.CreateTables(db)
@@ -51,7 +45,11 @@ func initDatabase() {
 }
 
 func main() {
-	checkServerKey().Wait()
+	msg, err := genkey.KeysChecking()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(msg)
 	initDatabase()
 	startServer().Wait()
 }

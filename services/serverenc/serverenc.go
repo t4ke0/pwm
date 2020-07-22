@@ -6,8 +6,10 @@ import (
 	"io/ioutil"
 	"log"
 	"path"
+	"regexp"
 
-	"../pwencrypter"
+	"github.com/TaKeO90/pwm/services/pwencrypter"
+	"github.com/TaKeO90/pwm/sqlite"
 )
 
 // KeysDir server key directory
@@ -33,28 +35,40 @@ func GenerateServerKey() bool {
 	pwd := GenerateRandomPassword()
 	key := pwencrypter.GenKeyP(pwd)
 	isSaved := pwencrypter.SaveKey(key, "server")
-	//TODO Look For A place Where to hide this key
+	//TODO figure out how to hide server's encryption key
 	return isSaved
 }
 
-// LookForServerKey Search for server encryption key if found return true otherwise return false
-func LookForServerKey() bool {
-	var found bool
+// SearchForKeys search for server's key and also user's keys
+func SearchForKeys(server, users bool) (bool, error) {
+	var amountOfuser int
 	files, err := ioutil.ReadDir(KeysDir)
 	if err != nil {
-		log.Fatal(err)
+		return false, err
 	}
 	if len(files) != 0 {
 		for _, f := range files {
-			if f.Name() == "server.key" {
-				found = true
-				break
-			} else {
-				found = false
+			if server {
+				if f.Name() == "server.key" {
+					return true, nil
+				}
+			} else if users {
+				v := regexp.MustCompile(`\w+.key`)
+				if matched := v.MatchString(f.Name()); matched && f.Name() != "server.key" {
+					amountOfuser++
+				}
 			}
 		}
+		db := sqlite.InitDb()
+		amount, err := sqlite.CountUsers(db)
+		if err != nil {
+			return false, err
+		}
+		if amountOfuser == amount {
+			return true, nil
+		}
 	}
-	return found
+	return false, nil
 }
 
 // CheckError check for errors then log error if err is not nil

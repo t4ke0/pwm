@@ -1,59 +1,33 @@
-package main
+package genkey
 
 import (
-	"../../services/serverenc"
-	"bufio"
 	"fmt"
-	"io/ioutil"
-	"log"
-	"os"
+
+	"github.com/TaKeO90/pwm/services/serverenc"
 )
 
-// KeyGen Generate the server encryption key
-func KeyGen() {
-	if isGen := serverenc.GenerateServerKey(); isGen {
-		fmt.Println("Generated Server encryption key")
-	}
-}
+func KeysChecking() (string, error) {
 
-// CopyFile We use this to copy server encryption key if it's not in the Right place When launching the launcher
-func CopyFile(src, dst string) bool {
-	readSrc, err := ioutil.ReadFile(src)
-	if err != nil {
-		log.Fatal(err)
-	}
-	//Write src into dst
-	if err := ioutil.WriteFile(dst, readSrc, 0600); err != nil {
-		log.Fatal(err)
-	}
-	return true
-}
-
-func main() {
-	const dstP string = "./services/pwencrypter/keys/server.key"
-
-	if found := serverenc.LookForServerKey(); found {
-		fmt.Println("Server's Key found")
+	if found, err := serverenc.SearchForKeys(true, false); found {
+		if err != nil {
+			return "", err
+		}
+		return "Server's Key found", nil
 	} else {
-		fmt.Printf("Have You Changed the Path of the server key ? [[Y]/n] ")
-		scanner := bufio.NewScanner(os.Stdin)
-		scanner.Scan()
-		newKeyPath := bufio.NewScanner(os.Stdin)
-		switch scanner.Text() {
-		case "n":
-			KeyGen()
-		case "y":
-			fmt.Printf("Enter key path : ")
-			newKeyPath.Scan()
-			if isCopied := CopyFile(newKeyPath.Text(), dstP); isCopied {
-				fmt.Println("Copied The Key SuccessFuly")
+		// search for users encryption key if there is no user keys then we through an err
+		// otherwise we need to create a server key
+		usersKfound, err := serverenc.SearchForKeys(false, true)
+		if err != nil {
+			return "", err
+		}
+		if !usersKfound {
+			//we generate new server key
+			if isOk := serverenc.GenerateServerKey(); isOk {
+				return "Generated a Server Key", nil
 			}
-		default:
-			fmt.Printf("Enter key path : ")
-			newKeyPath.Scan()
-			if isCopied := CopyFile(newKeyPath.Text(), dstP); isCopied {
-				fmt.Println("Copied The Key SuccessFuly")
-			}
+		} else {
+			return "", fmt.Errorf("Server's key not found\n")
 		}
 	}
+	return "", nil
 }
