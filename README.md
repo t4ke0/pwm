@@ -10,6 +10,7 @@
 [+] Decypting user's key in case he need ot show , add or update his credentials
 [+] Support REST API with JSON
 [+] Get better score in go report card
+[] should support kubernetes
 
 ```
 
@@ -19,6 +20,15 @@
 
 ```sh
 go get 
-go run launcher
+make
+./launcher
 
 ```
+OR run it on Docker
+
+```sh
+docker build -t pwm:v1 .
+docker run --publish 5000:5000 --rm pwm
+
+```
+
