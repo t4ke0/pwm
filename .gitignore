@@ -2,3 +2,6 @@
 *.db
 *.backup
 ssl-proxy
+*.pem
+*.sum
+launcher

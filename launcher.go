@@ -66,6 +66,13 @@ func startServer(c chan chanItems, wg *sync.WaitGroup) {
 func runFrontEnd(c chan chanItems, wg *sync.WaitGroup) {
 	cI := new(chanItems)
 	defer wg.Done()
+	cmd := exec.Command("npm", "npm", "run", "build")
+	err := cmd.Run()
+	if err != nil {
+		cI.err = err
+		cI.p = nil
+		c <- *cI
+	}
 	p, err := startProcess(frontEndPath, "npm", "start")
 	if err != nil {
 		cI.err = err
@@ -138,7 +145,13 @@ func initDatabase() {
 func run() {
 	var Wg sync.WaitGroup
 	_, err := genkey.KeysChecking()
-	checkError(err)
+	if err != nil {
+		if err := os.Mkdir("./services/pwencrypter/keys", 0700); err != nil {
+			log.Fatal(err)
+		}
+		_, err = genkey.KeysChecking()
+		checkError(err)
+	}
 	initDatabase()
 	Wg.Add(3)
 	c1 := make(chan chanItems, 3)

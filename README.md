@@ -28,7 +28,7 @@ OR run it on Docker
 
 ```sh
 docker build -t pwm:v1 .
-docker run --publish 5000:5000 --rm pwm
+docker run -p  5000:5000 --name pwm -d pwm:v1
 
 ```
 
