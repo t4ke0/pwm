@@ -1,7 +1,6 @@
 package dialer
 
 //TODO: add a go routine to send emails
-//TODO: compare data then add just the diffrent creds to the db for "/creds"
 
 import (
 	"encoding/json"
@@ -155,7 +154,7 @@ func UploadCredFile(w http.ResponseWriter, r *http.Request) {
 }
 
 func setupResponse(w *http.ResponseWriter, r *http.Request) {
-	(*w).Header().Set("Access-Control-Allow-Origin", "http://localhost:5000")
+	(*w).Header().Set("Access-Control-Allow-Origin", "https://localhost:4430")
 	(*w).Header().Set("Access-Control-Allow-Methods", "POST,GET")
 	(*w).Header().Set("Access-Control-Allow-Credentials", "true")
 	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length,Set-Cookie , Accept-Encoding, X-CSRF-Token, Authorization")
