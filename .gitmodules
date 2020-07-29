@@ -1,0 +1,3 @@
+[submodule "ssl-proxy"]
+	path = ssl-proxy
+	url = https://github.com/malikbenkirane/ssl-proxy.git
