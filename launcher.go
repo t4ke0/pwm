@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -18,6 +17,7 @@ const (
 	frontEndPath string = "./myfrontend/"
 	sslProxy     string = "./ssl-proxy/"
 	frontEndL    string = "127.0.0.1:5000"
+	fntShell     string = "./runFnt.sh"
 )
 
 func checkError(err error) {
@@ -66,7 +66,8 @@ func startServer(c chan chanItems, wg *sync.WaitGroup) {
 func runFrontEnd(c chan chanItems, wg *sync.WaitGroup) {
 	cI := new(chanItems)
 	defer wg.Done()
-	cmd := exec.Command("npm", "npm", "run", "build")
+
+	cmd := exec.Command("sh", fntShell)
 	err := cmd.Run()
 	if err != nil {
 		cI.err = err
@@ -97,7 +98,6 @@ func (s *sslProxyCertFile) runsslProxy() (*os.Process, error) {
 		}
 		return p, nil
 	} else if s.certPath != "" && s.keyPath != "" {
-		fmt.Println(s.certPath, s.keyPath)
 		p, err := startProcess(sslProxy, "go", "run", "main.go", "-cert", s.certPath, "-key", s.keyPath, "-from", "localhost:4430", "-to", frontEndL, "-altnames", "localhost")
 		if err != nil {
 			return nil, err
