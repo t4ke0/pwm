@@ -108,8 +108,10 @@ function GrabTableData(){
   payload.Category = filtered;
   for (var i=0;i<cnt.length;i++) {
     if ( cnt[i].value != "" ) {
-      payload.Credential.push({"Username":cnt[i].value,"Password":cnt[i+1].value,"Category":cnt[i+2].value})
+      payload.Credential.push({"Username":cnt[i].value,"Password":cnt[i+1].value,"Category":cnt[i+2].value});
       i = i+2 ;
+    } else if (cnt[i].value == "" && i != cnt.length) {
+      continue;
     } else {
       table.updated = false;
       break;
