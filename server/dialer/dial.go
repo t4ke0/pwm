@@ -18,10 +18,9 @@ import (
 	"github.com/TaKeO90/pwm/identityprovider"
 	"github.com/TaKeO90/pwm/services/emailsender"
 	"github.com/TaKeO90/pwm/services/genpassw"
-	"github.com/TaKeO90/pwm/services/pwdelete"
+	"github.com/TaKeO90/pwm/services/pwcompare"
 	"github.com/TaKeO90/pwm/services/pwsaver"
 	"github.com/TaKeO90/pwm/services/pwshow"
-	"github.com/TaKeO90/pwm/services/pwupdater"
 	"github.com/TaKeO90/pwm/services/readcredfile"
 )
 
@@ -314,6 +313,7 @@ func handleJSONBody(r *http.Request) error {
 	return nil
 }
 
+//TODO: not sure 100% need test
 //ServeCreds update and delete User creds if the front-end credential has been changed
 func ServeCreds(w http.ResponseWriter, r *http.Request) {
 	handleOption(w, r)
@@ -321,31 +321,15 @@ func ServeCreds(w http.ResponseWriter, r *http.Request) {
 	err := handleJSONBody(r)
 	CheckError(err)
 	if username != "" && d.Credential != nil {
-		updateM, addL, delL, isCtg := pwshow.Compare(d.Credential, d.Category)
-		if len(updateM) != 0 && isCtg {
-			cl := pwupdater.ParseMap(updateM, true)
-			ok, err := cl.UpdateCreds(username)
-			CheckError(err)
-			c := &Creds{Updated: ok}
+		index := pwcompare.Compare(pwshow.FinalList, d.Credential)
+		if ok := pwcompare.DiffAnalyse(username, d.Category, pwshow.FinalList, d.Credential, index); ok {
+			c := &Creds{Updated: true}
 			json.NewEncoder(w).Encode(c)
-		} else if len(updateM) != 0 && !isCtg {
-			cl := pwupdater.ParseMap(updateM, false)
-			ok, err := cl.UpdateCreds(username)
-			CheckError(err)
-			c := &Creds{Updated: ok}
+		} else {
+			c := &Creds{Updated: false}
 			json.NewEncoder(w).Encode(c)
 		}
-		if len(addL) != 0 {
-			ok := pwsaver.ParseAndAdd(addL, username)
-			c := &Creds{Updated: ok}
-			json.NewEncoder(w).Encode(c)
-		}
-		if len(delL) != 0 {
-			ok, err := pwdelete.DeleteCreds(delL, isCtg)
-			CheckError(err)
-			c := &Creds{Updated: ok}
-			json.NewEncoder(w).Encode(c)
-		}
+
 	} else {
 		c := &Creds{Updated: false}
 		json.NewEncoder(w).Encode(c)
