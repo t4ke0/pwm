@@ -1,4 +1,3 @@
 #!/bin/sh
 
-cd myfrontend
-npm install ;npm run build
+cd myfrontend ; npm start
