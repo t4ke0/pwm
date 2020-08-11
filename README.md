@@ -20,7 +20,7 @@
 # Usage
 
 ```sh
-RUN git clone --recurse-submodules  https://github.com/TaKeO90/pwm.git
+git clone --recurse-submodules  https://github.com/TaKeO90/pwm.git
 make -B
 ./launcher
 
