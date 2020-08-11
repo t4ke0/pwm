@@ -10,6 +10,7 @@
 [+] Decypting user's key in case he need ot show , add or update his credentials
 [+] Support REST API with JSON
 [+] Get better score in go report card
+[] make a docker image
 [] should support kubernetes
 
 ```
@@ -19,8 +20,8 @@
 # Usage
 
 ```sh
-go get 
-make
+RUN git clone --recurse-submodules  https://github.com/TaKeO90/pwm.git
+make -B
 ./launcher
 
 ```
@@ -28,7 +29,6 @@ OR run it on Docker
 
 ```sh
 docker build -t pwm:v1 .
-docker run -p  5000:5000 --name pwm -d pwm:v1
+docker run -p 4430:4430 -v <host direct>:/go/src/github.com/TaKeO90/pwm/ --name pwm -d pwm:v1
 
 ```
-

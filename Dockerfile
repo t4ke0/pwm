@@ -1,19 +1,25 @@
 FROM golang:alpine
-
 RUN apk update && apk upgrade && \
-    apk add --no-cache bash git gcc libc-dev make
+    apk add --no-cache bash git  make nodejs nodejs-npm gcc libc-dev
 
 RUN mkdir -p /go/src/github.com/TaKeO90/pwm/
 
-WORKDIR /go/src/github.com/TaKeO90/
+WORKDIR /go/src/github.com/TaKeO90/pwm/
 
-RUN git clone https://github.com/TaKeO90/pwm.git
+COPY . /go/src/github.com/TaKeO90/pwm/
+RUN make router
+WORKDIR /go/src/github.com/TaKeO90/pwm/myfrontend/
+RUN npm install && npm run build 
 
-COPY . /go/src/github.com/TaKeO90/ 
-
-#RUN go build -o launcher launcher.go
+WORKDIR /go/src/github.com/TaKeO90/pwm/ssl-proxy
 RUN make build
 
-CMD ["./launcher"]
+WORKDIR /go/src/github.com/TaKeO90/pwm/
 
-EXPOSE 4430
+VOLUME /go/src/github.com/TaKeO90/pwm/
+
+EXPOSE 4430/tcp
+EXPOSE 8080/tcp
+EXPOSE 5000/tcp
+
+CMD "./router";"./runFnt.sh";"./ssl-proxy/ssl-proxy"
