@@ -1,3 +1,6 @@
 #!/bin/sh
 
-cd myfrontend ; npm start
+#npm start --prefix myfrontend/
+cd myfrontend/
+npm install && npm build
+
