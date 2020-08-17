@@ -2,7 +2,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/TaKeO90/pwm)](https://goreportcard.com/report/github.com/TaKeO90/pwm)
 
 # SO FAR || ROADMAP
-```
+
 - [x] Register & login 
 - [x] generating encryption key for the user for encrypting and decrypting credentials 
 - [x] Save & Show User Credentials 
@@ -13,7 +13,6 @@
 - [x] make a docker image for each service
 - [ ] deploy those images using kubernetes
 
-```
 
 
 
