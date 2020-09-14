@@ -16,7 +16,7 @@ const (
 	mainf        string = "./server/main.go"
 	frontEndPath string = "./myfrontend/"
 	sslProxy     string = "./ssl-proxy/"
-	frontEndL    string = "127.0.0.1:5000"
+	frontEndL    string = "127.0.0.1:5555"
 	fntShell     string = "./runFnt.sh"
 )
 
