@@ -14,7 +14,7 @@ RUN mkdir myfrontend
 WORKDIR myfrontend/
 COPY ./myfrontend .
 RUN npm install
-EXPOSE 5000/tcp
+EXPOSE 5555/tcp
 CMD ["nmp start"]
 
 
@@ -24,8 +24,7 @@ RUN apk update && apk upgrade && \
 RUN mkdir ssl-proxy/
 WORKDIR ssl-proxy/
 COPY ./ssl-proxy/ .
-RUN ls -alth
 RUN make build
 VOLUME ssl-proxy/
 EXPOSE 4430
-CMD ["./ssl-proxy","-from","localhost:4430","-to","127.0.0.1:5000","-altnames","localhost"]
+CMD ["./ssl-proxy","-from","localhost:4430","-to","127.0.0.1:5555","-altnames","localhost"]
