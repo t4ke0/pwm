@@ -11,4 +11,4 @@ this is not the final plan for the pwm just my first try. also i'm planning to u
 - GRPC.
 - REST api.
 
-![pwm-diagram]('./pwm-diagram.jpg')
+![pwm](./pwm_diagram.jpg)
