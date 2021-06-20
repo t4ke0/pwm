@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package proto;
+
+
+option go_package = "github.com/t4ke0/pwm/keys_manager/proto";
+
+service KeyManager {
+    rpc GenKey(KeyGenRequest) returns (KeyResponse) {}
+    rpc GetUserKey(KeyFetchRequest) returns (KeyResponse) {}
+}
+
+enum Mode {
+    Server = 0;
+    User   = 1;
+}
+
+message KeyGenRequest {
+    int64 size = 1;
+    Mode  mode = 2;
+}
+
+message KeyFetchRequest {
+    string username = 1;
+}
+
+message KeyResponse {
+    string Key = 1;
+}
+
+/*
+
+var Mode int 
+const (
+	Server
+	User
+)
+
+func GenKey(mode Mode, size int) (key string)
+func GetUserKey() []byte // i'm not sure which type should return.
+func GetServerKey() []byte
+*/
