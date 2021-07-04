@@ -92,9 +92,9 @@ func (k Key) Encrypt(plainUserKey Key) ([]byte, error) {
 
 // Decrypt decrypts the user key using servers key.
 func (k Key) Decrypt(encryptedUserKey []byte) (Key, error) {
-	decypted, err := gcmDecrpytion(k, encryptedUserKey)
+	decrypted, err := gcmDecrpytion(k, encryptedUserKey)
 	if err != nil {
 		return nil, err
 	}
-	return Key(decypted), nil
+	return Key(decrypted), nil
 }
