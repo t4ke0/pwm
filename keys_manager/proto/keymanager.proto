@@ -27,16 +27,3 @@ message KeyFetchRequest {
 message KeyResponse {
     string Key = 1;
 }
-
-/*
-
-var Mode int 
-const (
-	Server
-	User
-)
-
-func GenKey(mode Mode, size int) (key string)
-func GetUserKey() []byte // i'm not sure which type should return.
-func GetServerKey() []byte
-*/
