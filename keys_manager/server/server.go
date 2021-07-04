@@ -103,8 +103,21 @@ func (s *KeyManagerServer) GenKey(ctx context.Context,
 func (s *KeyManagerServer) GetUserKey(ctx context.Context,
 	fetchMsg *pb.KeyFetchRequest) (*pb.KeyResponse, error) {
 
-	// TODO: get user key from database.
-	return nil, nil
+	conn, err := db.New(postgresURL)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	userkey, err := conn.LoadUserKey(fetchMsg.Username)
+	if err != nil && err == db.ErrNoRows {
+		return nil, fmt.Errorf("user's key not found")
+	} else if err != nil {
+		return nil, err
+	}
+	return &pb.KeyResponse{
+		Key: userkey,
+	}, nil
 }
 
 func init() {
