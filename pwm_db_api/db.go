@@ -80,7 +80,7 @@ INSERT into user(username, password, key) VALUES($1, $2, $3)
 	return nil
 }
 
-// GetUserKey
+// LoadUserKey
 func (d Db) LoadUserKey(username string) (userkey string, err error) {
 	err = d.conn.QueryRow(
 		`
