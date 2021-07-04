@@ -57,3 +57,35 @@ INSERT into server(server_key) values($1)
 
 	return nil
 }
+
+type RegistrationConfig struct {
+	Username string
+	Password string
+	Key      string
+}
+
+func (d Db) InsertNewUser(config RegistrationConfig) error {
+	result, err := d.conn.Exec(
+		`
+INSERT into user(username, password, key) VALUES($1, $2, $3)
+		`, config.Username, config.Password, config.Key)
+
+	if err != nil {
+		return err
+	}
+
+	if n, _ := result.RowsAffected(); n != 1 {
+		return ErrInsertion
+	}
+	return nil
+}
+
+// GetUserKey
+func (d Db) LoadUserKey(username string) (userkey string, err error) {
+	err = d.conn.QueryRow(
+		`
+SELECT key FROM user WHERE username = $1
+		`, username).Scan(&userkey)
+
+	return
+}
