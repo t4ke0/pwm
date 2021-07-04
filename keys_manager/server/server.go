@@ -9,64 +9,95 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/t4ke0/pwm/keys_manager/common"
 	pb "github.com/t4ke0/pwm/keys_manager/proto"
+
+	"github.com/t4ke0/pwm/keys_manager/common"
+	db "github.com/t4ke0/pwm/pwm_db_api"
 )
 
 const port = 9090
 
 var (
 	wordListFilePath = os.Getenv("WORD_LIST_PATH")
+	//
+	postgresPW   = os.Getenv("POSTGRES_PASSWORD")
+	postgresHost = os.Getenv("POSTGRES_HOST")
+	postgresUser = os.Getenv("POSTGRES_USER")
+	postgresDB   = os.Getenv("POSTGRES_DB")
+
+	postgresURL = fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable",
+		postgresUser,
+		postgresPW,
+		postgresHost,
+		postgresDB)
 )
 
 type KeyManagerServer struct {
 	pb.UnimplementedKeyManagerServer
 }
 
-// NOTE: will be replaced with the server key that we will get from the DB.
-var tempServerKey common.Key
-
 func (s *KeyManagerServer) GenKey(ctx context.Context,
 	genRequest *pb.KeyGenRequest) (*pb.KeyResponse, error) {
 
-	if wordListFilePath == "" {
-		return nil, fmt.Errorf("word list path not set")
+	conn, err := db.New(postgresURL)
+	if err != nil {
+		return nil, err
 	}
+	defer conn.Close()
 
 	switch genRequest.Mode {
 	case pb.Mode_Server:
-		// TODO: check if we already generated a server key from the postgres db.
-		// for now we are just generating new key each time.
-		// for the sake of testing.
+		_, err := conn.GetStoredServerKey()
+		if err != nil && err != db.ErrNoRows {
+			return nil, fmt.Errorf("server key is already exists in the database")
+		}
+		if err != nil {
+			return nil, err
+		}
 		serverKey, err := common.GenerateEncryptionKey(wordListFilePath,
 			int(genRequest.Size))
 		if err != nil {
 			return nil, err
 		}
-		tempServerKey = serverKey
+
+		if err := db.StoreServerKey(serverKey.String()); err != nil {
+			return nil, err
+		}
+
 		return &pb.KeyResponse{
 			Key: serverKey.String(),
 		}, nil
+
 	case pb.Mode_User:
-		// TODO load server key from db so we can encrypt the user key with it
-		// then we serve it .
+		encodedServerKey, err := conn.GetStoredServerKey()
+		if err != nil && err == ErrNoRows {
+			// we need server key to encrypt user key.
+			return nil, fmt.Errorf("server key is not yet generated.")
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		serverKey, err := common.DecodeStringKey(encodedServerKey)
+		if err != nil {
+			return nil, err
+		}
 		userKey, err := common.GenerateEncryptionKey(wordListFilePath,
 			int(genRequest.Size))
 		if err != nil {
 			return nil, err
 		}
-		if tempServerKey == nil {
-			return nil, fmt.Errorf("server's key is not yet generated")
-		}
-		key, err := tempServerKey.Encrypt(userKey)
+		key, err := serverKey.Encrypt(userKey)
 		if err != nil {
 			return nil, err
 		}
 		return &pb.KeyResponse{
 			Key: common.Key(key).String(),
 		}, nil
+
+	default:
+		return nil, fmt.Errorf("no mode has been set")
 	}
-	return nil, fmt.Errorf("no mode has been set")
 }
 
 func (s *KeyManagerServer) GetUserKey(ctx context.Context,
