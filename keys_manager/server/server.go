@@ -107,6 +107,21 @@ func (s *KeyManagerServer) GetUserKey(ctx context.Context,
 	return nil, nil
 }
 
+func init() {
+	// Verify env vars
+	for _, arg := range []string{
+		"WORD_LIST_PATH",
+		"POSTGRES_HOST",
+		"POSTGRES_DB",
+		"POSTGRES_USER",
+		"POSTGRES_PASSWORD",
+	} {
+		if os.Getenv(arg) == "" {
+			panic(fmt.Sprintf("%v env variable is not set", arg))
+		}
+	}
+}
+
 func main() {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
