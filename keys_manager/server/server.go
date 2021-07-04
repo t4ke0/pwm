@@ -60,7 +60,7 @@ func (s *KeyManagerServer) GenKey(ctx context.Context,
 			return nil, err
 		}
 
-		if err := db.StoreServerKey(serverKey.String()); err != nil {
+		if err := conn.StoreServerKey(serverKey.String()); err != nil {
 			return nil, err
 		}
 
@@ -70,7 +70,7 @@ func (s *KeyManagerServer) GenKey(ctx context.Context,
 
 	case pb.Mode_User:
 		encodedServerKey, err := conn.GetStoredServerKey()
-		if err != nil && err == ErrNoRows {
+		if err != nil && err == db.ErrNoRows {
 			// we need server key to encrypt user key.
 			return nil, fmt.Errorf("server key is not yet generated.")
 		}
