@@ -81,6 +81,15 @@ func GenerateEncryptionKey(filePath string, size int) (Key, error) {
 	return key, nil
 }
 
+// DecodeStringKey get Key from hex encoded string key.
+func DecodeStringKey(key string) (Key, error) {
+	k, err := hex.DecodeString(key)
+	if err != nil {
+		return nil, err
+	}
+	return Key(k), nil
+}
+
 func (k Key) String() string {
 	return hex.EncodeToString(k)
 }
