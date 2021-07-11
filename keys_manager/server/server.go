@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -32,13 +33,17 @@ var (
 		postgresDB)
 )
 
+var (
+	ErrKeyAlreadyExists   = errors.New("key already exists in the `DB`")
+	ErrServerKeyNotExists = errors.New("server key is not yet generated.")
+)
+
 type KeyManagerServer struct {
 	pb.UnimplementedKeyManagerServer
 }
 
 func (s *KeyManagerServer) GenKey(ctx context.Context,
 	genRequest *pb.KeyGenRequest) (*pb.KeyResponse, error) {
-
 	conn, err := db.New(postgresURL)
 	if err != nil {
 		return nil, err
@@ -48,34 +53,29 @@ func (s *KeyManagerServer) GenKey(ctx context.Context,
 	switch genRequest.Mode {
 	case pb.Mode_Server:
 		_, err := conn.GetStoredServerKey()
-		if err != nil && err != db.ErrNoRows {
-			return nil, fmt.Errorf("server key is already exists in the database")
+		if err != nil && err == db.ErrNoRows {
+			generatedServerKey, err := common.GenerateEncryptionKey(wordListFilePath,
+				int(genRequest.Size))
+			if err != nil {
+				return nil, err
+			}
+			if err := conn.StoreServerKey(generatedServerKey.String()); err != nil {
+				return nil, err
+			}
+			return &pb.KeyResponse{
+				Key: generatedServerKey.String(),
+			}, nil
 		}
 		if err != nil {
 			return nil, err
 		}
-		serverKey, err := common.GenerateEncryptionKey(wordListFilePath,
-			int(genRequest.Size))
-		if err != nil {
-			return nil, err
-		}
 
-		if err := conn.StoreServerKey(serverKey.String()); err != nil {
-			return nil, err
-		}
-
-		return &pb.KeyResponse{
-			Key: serverKey.String(),
-		}, nil
+		return nil, ErrKeyAlreadyExists
 
 	case pb.Mode_User:
 		encodedServerKey, err := conn.GetStoredServerKey()
-		if err != nil && err == db.ErrNoRows {
-			// we need server key to encrypt user key.
-			return nil, fmt.Errorf("server key is not yet generated.")
-		}
 		if err != nil {
-			return nil, err
+			return nil, ErrServerKeyNotExists
 		}
 
 		serverKey, err := common.DecodeStringKey(encodedServerKey)
