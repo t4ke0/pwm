@@ -67,7 +67,7 @@ type RegistrationConfig struct {
 func (d Db) InsertNewUser(config RegistrationConfig) error {
 	result, err := d.conn.Exec(
 		`
-INSERT into user(username, password, key) VALUES($1, $2, $3)
+INSERT into user_t(username, password, key) VALUES($1, $2, $3)
 		`, config.Username, config.Password, config.Key)
 
 	if err != nil {
@@ -84,7 +84,7 @@ INSERT into user(username, password, key) VALUES($1, $2, $3)
 func (d Db) LoadUserKey(username string) (userkey string, err error) {
 	err = d.conn.QueryRow(
 		`
-SELECT key FROM user WHERE username = $1
+SELECT key FROM user_t WHERE username = $1
 		`, username).Scan(&userkey)
 
 	return
