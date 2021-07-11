@@ -3,7 +3,10 @@ package pwm_db_api
 import (
 	"database/sql"
 	"errors"
+	"fmt"
+	"strings"
 
+	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 )
 
@@ -27,6 +30,25 @@ func New(url string) (Db, error) {
 	return Db{conn}, nil
 }
 
+// CreateTestingDatabase
+func CreateTestingDatabase(basicURL string) (string, error) {
+	const testDbName = "unit_test"
+	c, err := New(basicURL)
+	if err != nil {
+		return "", err
+	}
+	_, err = c.conn.Exec(fmt.Sprintf("CREATE DATABASE %v", testDbName))
+	if err != nil {
+		return "", err
+	}
+	out, err := pq.ParseURL(basicURL)
+	if err != nil {
+		return "", err
+	}
+	host := strings.Trim(strings.Split(strings.Split(out, " ")[1], "=")[1], "'")
+	testDbPath := fmt.Sprintf("postgres://%v/%v?sslmode=disable", host, testDbName)
+	return testDbPath, nil
+}
 // Close closes the postgres db connection.
 func (d Db) Close() error {
 	return d.conn.Close()
