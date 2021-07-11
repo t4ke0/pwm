@@ -46,9 +46,10 @@ func CreateTestingDatabase(basicURL string) (string, error) {
 		return "", err
 	}
 	host := strings.Trim(strings.Split(strings.Split(out, " ")[1], "=")[1], "'")
-	testDbPath := fmt.Sprintf("postgres://%v/%v?sslmode=disable", host, testDbName)
+	testDbPath := fmt.Sprintf("postgres://postgres:%v/%v?sslmode=disable", host, testDbName)
 	return testDbPath, nil
 }
+
 // Close closes the postgres db connection.
 func (d Db) Close() error {
 	return d.conn.Close()
