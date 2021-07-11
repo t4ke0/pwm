@@ -37,9 +37,18 @@ func CreateTestingDatabase(basicURL string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	_, err = c.conn.Exec(fmt.Sprintf("CREATE DATABASE %v", testDbName))
-	if err != nil {
+	var testDBExist string
+	if err := c.conn.QueryRow(`
+SELECT datname
+FROM pg_database
+WHERE datname = $1`, testDbName).Scan(&testDBExist); err != nil {
 		return "", err
+	}
+	if testDBExist == "" {
+		_, err = c.conn.Exec(fmt.Sprintf("CREATE DATABASE %v", testDbName))
+		if err != nil {
+			return "", err
+		}
 	}
 	out, err := pq.ParseURL(basicURL)
 	if err != nil {
