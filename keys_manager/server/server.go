@@ -142,6 +142,7 @@ func init() {
 			panic(fmt.Sprintf("Failed To create test database [%v]", err))
 		}
 		postgresURL = testPostgresPath
+		log.Printf("DEBUG POSTGRES_URL = %v", postgresURL)
 	}
 }
 
