@@ -31,6 +31,9 @@ var (
 		postgresPW,
 		postgresHost,
 		postgresDB)
+	//
+	test   = os.Getenv("TEST")
+	isTest = (test == "true")
 )
 
 var (
@@ -132,6 +135,13 @@ func init() {
 		if os.Getenv(arg) == "" {
 			panic(fmt.Sprintf("%v env variable is not set", arg))
 		}
+	}
+	if isTest {
+		testPostgresPath, err := db.CreateTestingDatabase(postgresURL)
+		if err != nil {
+			panic(fmt.Sprintf("Failed To create test database [%v]", err))
+		}
+		postgresURL = testPostgresPath
 	}
 }
 
