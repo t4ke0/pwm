@@ -4,9 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"strings"
 
-	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 )
 
@@ -41,7 +39,7 @@ func CreateTestingDatabase(basicURL string) (string, error) {
 	if err := c.conn.QueryRow(`
 SELECT datname
 FROM pg_database
-WHERE datname = $1`, testDbName).Scan(&testDBExist); err != nil {
+WHERE datname = $1`, testDbName).Scan(&testDBExist); err != nil && err != sql.ErrNoRows {
 		return "", err
 	}
 	if testDBExist == "" {
@@ -50,12 +48,16 @@ WHERE datname = $1`, testDbName).Scan(&testDBExist); err != nil {
 			return "", err
 		}
 	}
-	out, err := pq.ParseURL(basicURL)
-	if err != nil {
-		return "", err
+	var testDbPath string
+	var prev, next rune
+	for i, u := range basicURL {
+		if i != 0 && i != len(basicURL)-1 {
+			prev, next = rune(basicURL[i-1]), rune(basicURL[i+1])
+			if u == '/' && prev != '/' && next != '/' {
+				testDbPath = basicURL[:i] + "/" + testDbName + "?sslmode=disable"
+			}
+		}
 	}
-	host := strings.Trim(strings.Split(strings.Split(out, " ")[1], "=")[1], "'")
-	testDbPath := fmt.Sprintf("postgres://postgres:%v/%v?sslmode=disable", host, testDbName)
 	return testDbPath, nil
 }
 
