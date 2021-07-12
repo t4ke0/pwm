@@ -143,6 +143,14 @@ func init() {
 		}
 		postgresURL = testPostgresPath
 		log.Printf("DEBUG POSTGRES_URL = %v", postgresURL)
+		conn, err := db.New(postgresURL)
+		if err != nil {
+			panic(err)
+		}
+		defer conn.Close()
+		if err := conn.InitDB(); err != nil {
+			panic(err)
+		}
 	}
 }
 
