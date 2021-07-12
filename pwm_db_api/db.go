@@ -4,9 +4,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"os"
 
 	_ "github.com/lib/pq"
 )
+
+const SchemaFile = "schema.sql"
 
 var (
 	ErrNoRows    = sql.ErrNoRows
@@ -59,6 +62,19 @@ WHERE datname = $1`, testDbName).Scan(&testDBExist); err != nil && err != sql.Er
 		}
 	}
 	return testDbPath, nil
+}
+
+// InitDB initializes the tables.
+func (d Db) InitDB() error {
+	data, err := os.ReadFile(SchemaFile)
+	if err != nil {
+		return err
+	}
+	_, err = d.conn.Exec(string(data))
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Close closes the postgres db connection.
