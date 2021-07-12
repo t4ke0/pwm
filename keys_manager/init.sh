@@ -3,3 +3,4 @@ export POSTGRES_USER=postgres
 export POSTGRES_PASSWORD=securepassword
 export POSTGRES_HOST=localhost
 export POSTGRES_DB=postgres
+export TEST=true
