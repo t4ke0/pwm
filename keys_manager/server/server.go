@@ -75,6 +75,28 @@ func (s *KeyManagerServer) GenKey(ctx context.Context,
 
 		return nil, ErrKeyAlreadyExists
 
+	case pb.Mode_ServerAuth:
+		// try to load the auth server key.
+		_, err := conn.LoadAuthServerKey()
+		// if the auth server key doesn't exists in the db
+		// we generate it and store it into db.
+		if err != nil && err == db.ErrNoRows {
+			generatedAuthkey, err := common.GenerateEncryptionKey(
+				wordListFilePath, int(genRequest.Size))
+			if err != nil {
+				return nil, err
+			}
+			if err := conn.StoreAuthServerKey(generatedAuthkey.String()); err != nil {
+				return nil, err
+			}
+			return &pb.KeyResponse{
+				Key: generatedAuthkey.String(),
+			}, nil
+		} else if err != nil {
+			return nil, err
+		}
+		return nil, ErrKeyAlreadyExists
+
 	case pb.Mode_User:
 		encodedServerKey, err := conn.GetStoredServerKey()
 		if err != nil {
