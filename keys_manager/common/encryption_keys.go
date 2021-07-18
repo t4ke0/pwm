@@ -90,6 +90,7 @@ func DecodeStringKey(key string) (Key, error) {
 	return Key(k), nil
 }
 
+// String byte to string key.
 func (k Key) String() string {
 	return hex.EncodeToString(k)
 }
