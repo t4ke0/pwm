@@ -17,7 +17,7 @@ jobs:
         go-version: ^1.16 
 
     - name: build keys_manager
-      run: cd keys_manager && . init.sh &&  go build -o service server/server.go
+      run: cd keys_manager &&  go build -o service server/server.go
 
     - name: keys_manager testing
       run: cd keys_manager && go test -v ./keys_manager_testing/.
