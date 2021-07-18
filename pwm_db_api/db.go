@@ -180,7 +180,7 @@ WHERE username = $1
 		return false, err
 	}
 	if count != 0 {
-		return true
+		return true, nil
 	}
-	return false
+	return false, nil
 }
