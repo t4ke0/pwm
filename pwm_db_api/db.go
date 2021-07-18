@@ -168,3 +168,19 @@ SELECT key FROM user_t WHERE username = $1
 
 	return
 }
+
+func (d Db) UserExists(username string) (bool, error) {
+	var count int
+	err := d.conn.QueryRow(
+		`
+SELECT COUNT(*) FROM user_t
+WHERE username = $1
+`, username).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	if count != 0 {
+		return true
+	}
+	return false
+}
