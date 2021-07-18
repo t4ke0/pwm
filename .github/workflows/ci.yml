@@ -7,15 +7,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:13
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: securepassword
-          POSTGRES_DB: postgres
-        ports: 
-          - 5432:5432
 
     steps:
     - uses: actions/checkout@v2
@@ -25,8 +16,8 @@ jobs:
       with:
         go-version: ^1.16 
 
-    - name: build & running 
-      run: cd keys_manager && . init.sh &&  go build -o service server/server.go && ./service& 
+    - name: build keys_manager
+      run: cd keys_manager && . init.sh &&  go build -o service server/server.go
 
-    - name: keys-manager-Test
-      run: cd keys_manager && . init.sh && go test -v ./keys_manager_testing/.
+    - name: keys_manager testing
+      run: cd keys_manager && go test -v ./keys_manager_testing/.
