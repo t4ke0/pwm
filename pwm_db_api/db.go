@@ -169,6 +169,7 @@ SELECT key FROM user_t WHERE username = $1
 	return
 }
 
+// UserExists
 func (d Db) UserExists(username string) (bool, error) {
 	var count int
 	err := d.conn.QueryRow(
@@ -183,4 +184,14 @@ WHERE username = $1
 		return true, nil
 	}
 	return false, nil
+}
+
+// GetAuthServerKey ...
+func (d Db) GetAuthServerKey() (string, error) {
+	var authSrvKey string
+	err := d.conn.QueryRow("SELECT auth_server_key FROM server").Scan(&authSrvKey)
+	if err != nil && err != sql.ErrNoRows {
+		return "", err
+	}
+	return authSrvKey, nil
 }
