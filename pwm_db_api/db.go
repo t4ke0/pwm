@@ -91,7 +91,7 @@ FROM server`).Scan(&key)
 	return
 }
 
-// StoreServerKey
+// StoreServerKey store the server encryption key.
 func (d Db) StoreServerKey(key string) error {
 	result, err := d.conn.Exec(
 		`
@@ -108,12 +108,40 @@ INSERT into server(server_key) values($1)
 	return nil
 }
 
+// LoadAuthServerKey get auth server key from server table.
+func (d Db) LoadAuthServerKey() (authServerKey string, err error) {
+	err = d.conn.QueryRow(
+		`
+SELECT auth_server_key
+FROM server
+`).Scan(&authServerKey)
+	return
+}
+
+// StoreAuthServerKey
+func (d Db) StoreAuthServerKey(key string) error {
+	result, err := d.conn.Exec(
+		`
+INSERT INTO server(auth_server_key)
+VALUES($1)
+`, key)
+	if err != nil {
+		return err
+	}
+	if n, _ := result.RowsAffected(); n == 0 {
+		return ErrInsertion
+	}
+	return nil
+}
+
+// RegistrationConfig registration configuration
 type RegistrationConfig struct {
 	Username string
 	Password string
 	Key      string
 }
 
+// InsertNewUser insert new user into user_t table.
 func (d Db) InsertNewUser(config RegistrationConfig) error {
 	result, err := d.conn.Exec(
 		`
