@@ -46,10 +46,10 @@ github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4/go.mod h1:
 github.com/rogpeppe/fastuuid v1.2.0/go.mod h1:jVj6XXZzXRy/MSR5jhDC/2q6DgLz+nrA6LYCDYWNEvQ=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5cxcmMvtA=
-github.com/t4ke0/pwm/pwm_db_api v0.0.0-20210711135049-a743c34aa03c h1:kV/n1DCvFQj1oEX42tjrTa/Bro9dj1cwKQ4ASngH1gY=
-github.com/t4ke0/pwm/pwm_db_api v0.0.0-20210711135049-a743c34aa03c/go.mod h1:dpHzSROVQ+8an7NtOrEc7vlVog850NX5b37a/zRe9DU=
-github.com/t4ke0/pwm/pwm_db_api v0.0.0-20210711150024-70fd895faa96 h1:VFka71tK8EDOuVGHICffQ1PcIEIbphWxN0YmqCfQ1hA=
-github.com/t4ke0/pwm/pwm_db_api v0.0.0-20210711150024-70fd895faa96/go.mod h1:dpHzSROVQ+8an7NtOrEc7vlVog850NX5b37a/zRe9DU=
+github.com/t4ke0/pwm/pwm_db_api v0.0.0-20210711152552-e65ba1f6fbd2 h1:uOZvIA40PXPEVPQpDUEVBqGVgIcwxwTW0RBpVwPsx9o=
+github.com/t4ke0/pwm/pwm_db_api v0.0.0-20210711152552-e65ba1f6fbd2/go.mod h1:dpHzSROVQ+8an7NtOrEc7vlVog850NX5b37a/zRe9DU=
+github.com/t4ke0/pwm/pwm_db_api v0.0.0-20210718105344-e60d99c1a0bb h1:1zID7wlSJtwyOhJY7w2t0Eyl2K2L3YziL38p0c247js=
+github.com/t4ke0/pwm/pwm_db_api v0.0.0-20210718105344-e60d99c1a0bb/go.mod h1:dpHzSROVQ+8an7NtOrEc7vlVog850NX5b37a/zRe9DU=
 go.opentelemetry.io/proto/otlp v0.7.0/go.mod h1:PqfVotwruBrMGOCsRd/89rSnXhoiJIqeYNgFYFoEGnI=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
