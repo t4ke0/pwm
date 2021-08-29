@@ -9,7 +9,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-const SchemaFile = "schema.sql"
+var SchemaFile = "schema.sql"
 
 var (
 	ErrNoRows    = sql.ErrNoRows
@@ -82,13 +82,15 @@ func (d Db) Close() error {
 	return d.conn.Close()
 }
 
-// GetStoredServerKey get server key if it's available in the db.
-func (d Db) GetStoredServerKey() (key string, err error) {
-	err = d.conn.QueryRow(
-		`
-SELECT server_key
-FROM server`).Scan(&key)
-	return
+func (d Db) GetServerEncryptionKey() (string, error) {
+	var key string
+	err := d.conn.QueryRow(`
+SELECT server_key FROM server_encryption_key
+`).Scan(&key)
+	if err != nil && err != ErrNoRows {
+		return key, err
+	}
+	return key, nil
 }
 
 // StoreServerKey store the server encryption key.
@@ -108,14 +110,14 @@ INSERT into server(server_key) values($1)
 	return nil
 }
 
-// LoadAuthServerKey get auth server key from server table.
-func (d Db) LoadAuthServerKey() (authServerKey string, err error) {
-	err = d.conn.QueryRow(
-		`
-SELECT auth_server_key
-FROM server
-`).Scan(&authServerKey)
-	return
+// GetAuthServerKey ...
+func (d Db) GetAuthServerKey() (string, error) {
+	var authSrvKey string
+	err := d.conn.QueryRow("SELECT auth_server_key FROM server").Scan(&authSrvKey)
+	if err != nil && err != sql.ErrNoRows {
+		return "", err
+	}
+	return authSrvKey, nil
 }
 
 // StoreAuthServerKey
@@ -184,14 +186,4 @@ WHERE username = $1
 		return true, nil
 	}
 	return false, nil
-}
-
-// GetAuthServerKey ...
-func (d Db) GetAuthServerKey() (string, error) {
-	var authSrvKey string
-	err := d.conn.QueryRow("SELECT auth_server_key FROM server").Scan(&authSrvKey)
-	if err != nil && err != sql.ErrNoRows {
-		return "", err
-	}
-	return authSrvKey, nil
 }
