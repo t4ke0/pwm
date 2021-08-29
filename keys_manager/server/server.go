@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -13,6 +12,7 @@ import (
 	pb "github.com/t4ke0/pwm/keys_manager/proto"
 
 	"github.com/t4ke0/pwm/keys_manager/common"
+	"github.com/t4ke0/pwm/keys_manager/keys_manager_errors"
 	db "github.com/t4ke0/pwm/pwm_db_api"
 )
 
@@ -34,11 +34,6 @@ var (
 	//
 	test   = os.Getenv("TEST")
 	isTest = (test == "true")
-)
-
-var (
-	ErrKeyAlreadyExists   = errors.New("key already exists in the `DB`")
-	ErrServerKeyNotExists = errors.New("server key is not yet generated.")
 )
 
 type KeyManagerServer struct {
@@ -73,7 +68,7 @@ func (s *KeyManagerServer) GenKey(ctx context.Context,
 			return nil, err
 		}
 
-		return nil, ErrKeyAlreadyExists
+		return nil, keys_manager_errors.ErrKeyAlreadyExists
 
 	case pb.Mode_ServerAuth:
 		// try to load the auth server key.
@@ -95,12 +90,12 @@ func (s *KeyManagerServer) GenKey(ctx context.Context,
 		} else if err != nil {
 			return nil, err
 		}
-		return nil, ErrKeyAlreadyExists
+		return nil, keys_manager_errors.ErrKeyAlreadyExists
 
 	case pb.Mode_User:
 		encodedServerKey, err := conn.GetStoredServerKey()
 		if err != nil {
-			return nil, ErrServerKeyNotExists
+			return nil, keys_manager_errors.ErrServerKeyNotExists
 		}
 
 		serverKey, err := common.DecodeStringKey(encodedServerKey)
@@ -165,14 +160,6 @@ func init() {
 		}
 		postgresURL = testPostgresPath
 		log.Printf("DEBUG POSTGRES_URL = %v", postgresURL)
-		conn, err := db.New(postgresURL)
-		if err != nil {
-			panic(err)
-		}
-		defer conn.Close()
-		if err := conn.InitDB(); err != nil {
-			panic(err)
-		}
 	}
 }
 
