@@ -1,0 +1,58 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:13.1
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=$db_password # don't forget to export db_password=<password>
+    ports: 
+      - "5432:5432"
+    networks: ["custom-net"]
+    volumes:
+      - pwm-db-volume:/var/lib/postgresql/data
+  key-manager:
+    environment:
+      - WORD_LIST_PATH=/opt/bin/words.txt
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=$db_password
+      - POSTGRES_HOST=db
+      - POSTGRES_DATABASE=postgres
+      - TEST=$TEST
+    build: ./keys_manager/.
+    ports:
+      - "9090:9090"
+    networks: ["custom-net"]
+    depends_on: 
+      - db
+  pwm_authenticator:
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=$db_password
+      - POSTGRES_HOST=db
+      - POSTGRES_DATABASE=postgres
+      - KEYS_MANAGER_HOST=key-manager
+      - KEYS_MANAGER_PORT=9090
+    build: ./pwm_authenticator/.
+    ports:
+      - "8080:8080"
+    networks: ["custom-net"]
+    depends_on:
+    - db
+  pwm_db_init:
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=$db_password
+      - POSTGRES_HOST=db
+      - POSTGRES_DATABASE=postgres
+      - KEYS_MANAGER_HOST=key-manager:9090
+      - TEST=$TEST
+    build: ./pwm_db_api/.
+    networks: ["custom-net"]
+    depends_on:
+    - db
+
+volumes:
+  pwm-db-volume: {}
+
+networks: 
+  custom-net: {}
