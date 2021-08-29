@@ -1,6 +1,6 @@
 package main
 
-import "github.com/dgrijalva/jwt-go"
+import "github.com/dgrijalva/jwt-go/v4"
 
 // TokenClaims is the information that a JWT token will hold.
 type TokenClaims struct {
