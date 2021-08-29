@@ -148,7 +148,7 @@ type RegistrationConfig struct {
 func (d Db) InsertNewUser(config RegistrationConfig) error {
 	result, err := d.conn.Exec(
 		`
-INSERT into user_t(username, password, email, key) VALUES($1, $2, $3, $3)
+INSERT into user_t(username, password, email, key) VALUES($1, $2, $3, $4)
 		`, config.Username, config.Password, config.Email, config.Key)
 
 	if err != nil {
