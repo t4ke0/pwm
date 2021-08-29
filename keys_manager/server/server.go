@@ -50,8 +50,11 @@ func (s *KeyManagerServer) GenKey(ctx context.Context,
 
 	switch genRequest.Mode {
 	case pb.Mode_Server:
-		_, err := conn.GetStoredServerKey()
-		if err != nil && err == db.ErrNoRows {
+		key, err := conn.GetServerEncryptionKey()
+		if err != nil {
+			return nil, err
+		}
+		if key == "" {
 			generatedServerKey, err := common.GenerateEncryptionKey(wordListFilePath,
 				int(genRequest.Size))
 			if err != nil {
@@ -64,18 +67,18 @@ func (s *KeyManagerServer) GenKey(ctx context.Context,
 				Key: generatedServerKey.String(),
 			}, nil
 		}
-		if err != nil {
-			return nil, err
-		}
 
 		return nil, keys_manager_errors.ErrKeyAlreadyExists
 
 	case pb.Mode_ServerAuth:
 		// try to load the auth server key.
-		_, err := conn.LoadAuthServerKey()
+		key, err := conn.GetAuthServerKey()
 		// if the auth server key doesn't exists in the db
 		// we generate it and store it into db.
-		if err != nil && err == db.ErrNoRows {
+		if err != nil {
+			return nil, err
+		}
+		if key == "" {
 			generatedAuthkey, err := common.GenerateEncryptionKey(
 				wordListFilePath, int(genRequest.Size))
 			if err != nil {
@@ -87,13 +90,11 @@ func (s *KeyManagerServer) GenKey(ctx context.Context,
 			return &pb.KeyResponse{
 				Key: generatedAuthkey.String(),
 			}, nil
-		} else if err != nil {
-			return nil, err
 		}
 		return nil, keys_manager_errors.ErrKeyAlreadyExists
 
 	case pb.Mode_User:
-		encodedServerKey, err := conn.GetStoredServerKey()
+		encodedServerKey, err := conn.GetServerEncryptionKey()
 		if err != nil {
 			return nil, keys_manager_errors.ErrServerKeyNotExists
 		}
@@ -129,14 +130,31 @@ func (s *KeyManagerServer) GetUserKey(ctx context.Context,
 	}
 	defer conn.Close()
 
-	userkey, err := conn.LoadUserKey(fetchMsg.Username)
+	serverStrkey, err := conn.GetServerEncryptionKey()
+	if err != nil {
+		return nil, err
+	}
+	userStrkey, err := conn.LoadUserKey(fetchMsg.Username)
 	if err != nil && err == db.ErrNoRows {
 		return nil, fmt.Errorf("user's key not found")
 	} else if err != nil {
 		return nil, err
 	}
+	// decrypted user key to return
+	serverKey, err := common.DecodeStringKey(serverStrkey)
+	if err != nil {
+		return nil, err
+	}
+	userKey, err := common.DecodeStringKey(userStrkey)
+	if err != nil {
+		return nil, err
+	}
+	key, err := serverKey.Decrypt(userKey)
+	if err != nil {
+		return nil, err
+	}
 	return &pb.KeyResponse{
-		Key: userkey,
+		Key: key.String(),
 	}, nil
 }
 
@@ -145,7 +163,7 @@ func init() {
 	for _, arg := range []string{
 		"WORD_LIST_PATH",
 		"POSTGRES_HOST",
-		"POSTGRES_DB",
+		"POSTGRES_DATABASE",
 		"POSTGRES_USER",
 		"POSTGRES_PASSWORD",
 	} {
