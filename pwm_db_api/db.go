@@ -97,7 +97,7 @@ SELECT server_key FROM server_encryption_key
 func (d Db) StoreServerKey(key string) error {
 	result, err := d.conn.Exec(
 		`
-INSERT into server(server_key) values($1)
+INSERT into server_encryption_key(server_key) values($1)
 		`, key)
 	if err != nil {
 		return err
@@ -113,7 +113,7 @@ INSERT into server(server_key) values($1)
 // GetAuthServerKey ...
 func (d Db) GetAuthServerKey() (string, error) {
 	var authSrvKey string
-	err := d.conn.QueryRow("SELECT auth_server_key FROM server").Scan(&authSrvKey)
+	err := d.conn.QueryRow("SELECT auth_server_key FROM server_auth_key").Scan(&authSrvKey)
 	if err != nil && err != sql.ErrNoRows {
 		return "", err
 	}
@@ -124,7 +124,7 @@ func (d Db) GetAuthServerKey() (string, error) {
 func (d Db) StoreAuthServerKey(key string) error {
 	result, err := d.conn.Exec(
 		`
-INSERT INTO server(auth_server_key)
+INSERT INTO server_auth_key(auth_server_key)
 VALUES($1)
 `, key)
 	if err != nil {
