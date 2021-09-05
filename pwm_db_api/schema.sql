@@ -1,6 +1,6 @@
--- DROP TABLE IF EXISTS user_t;
 -- DROP TABLE IF EXISTS sessions;
 -- DROP TABLE IF EXISTS passwords;
+-- DROP TABLE IF EXISTS user_t;
 -- DROP TABLE IF EXISTS server_encryption_key;
 -- DROP TABLE IF EXISTS server_auth_key;
 
