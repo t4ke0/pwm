@@ -6,9 +6,11 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"google.golang.org/grpc"
 
 	keys_manager_pb "github.com/t4ke0/pwm/keys_manager/proto"
@@ -17,13 +19,6 @@ import (
 	"github.com/t4ke0/pwm/pwm_authenticator/passwords"
 	db "github.com/t4ke0/pwm/pwm_db_api"
 )
-
-// TODO: use JWT for authentication.
-
-// TODO: make a server that authenticate the user by returning back a JWT token.
-
-// TODO: make a simple JWT library that we can import from other services
-//		 such as Authorizer in order to authorize the JWT token.
 
 var (
 	keysManagerHost = os.Getenv("KEYS_MANAGER_HOST")
@@ -78,12 +73,76 @@ func init() {
 	}
 }
 
+func handleError(c *gin.Context) {
+	if r := recover(); r != nil {
+		c.JSON(http.StatusInternalServerError, api.ErrResponse{
+			ErrorMessage: r.(error).Error(),
+		})
+	}
+}
+
 func main() {
 
 	engine := gin.Default()
 	engine.Use(cors.Default())
 
-	engine.POST("/auth", func(c *gin.Context) {
+	engine.POST("/login", func(c *gin.Context) {
+		var req api.AuthRequest
+		defer handleError(c)
+		if err := c.BindJSON(&req); err != nil {
+			panic(err)
+		}
+		if req.Username.IsEmpty() || req.Password.IsEmpty() {
+			c.Status(http.StatusBadRequest)
+			return
+		}
+		conn, err := db.New(postgresLink)
+		if err != nil {
+			panic(err)
+		}
+		defer conn.Close()
+
+		info, err := conn.GetUserAuthInfo(req.Username.String())
+		if err != nil && err == db.ErrNoRows {
+			c.Status(http.StatusUnauthorized)
+			return
+		}
+		if err != nil {
+			panic(err)
+		}
+
+		storedPassword := passwords.ToHashedPassword(info.Password)
+		valid := storedPassword.IsCorrectPassword(req.Password.Byte())
+		if !valid {
+			c.Status(http.StatusUnauthorized)
+			return
+		}
+		sessionID := uuid.New().String()
+
+		authServerKey, err := conn.GetAuthServerKey()
+		if err != nil {
+			panic(err)
+		}
+
+		if authServerKey == "" {
+			panic("no auth server key in the database")
+		}
+
+		jwtToken, err := getNewJWTtoken([]byte(authServerKey), tokenClaims{
+			UserID:       info.ID,
+			Username:     req.Username.String(),
+			SessionID:    sessionID,
+			SymmetricKey: info.Key,
+		})
+		if err != nil {
+			panic(err)
+		}
+
+		if err := conn.InsertNewSession(sessionID, jwtToken, info.ID, time.Now()); err != nil {
+			panic(err)
+		}
+
+		c.JSON(http.StatusOK, api.AuthResponse{jwtToken})
 	})
 
 	engine.POST("/register", func(c *gin.Context) {
@@ -111,6 +170,17 @@ func main() {
 			c.String(http.StatusConflict, "username already taken")
 			return
 		}
+
+		emailExists, err := conn.EmailExists(req.Email.String())
+		if err != nil {
+			c.String(http.StatusInternalServerError, "Check Email existance [%v]", err)
+			return
+		}
+		if emailExists {
+			c.String(http.StatusConflict, "email already registred")
+			return
+		}
+
 		// Generate an encryption key for the user.
 		clientConn, err := dialKeysManager()
 		if err != nil {
@@ -147,6 +217,34 @@ func main() {
 		// TODO: in the future we can introduce an email service that sends an
 		// email verification to the users
 		return
+	})
+
+	engine.GET("/info", func(c *gin.Context) {
+		tokenString := c.GetHeader("token")
+		if tokenString == "" {
+			c.Status(http.StatusBadRequest)
+			return
+		}
+
+		defer handleError(c)
+		conn, err := db.New(postgresLink)
+		if err != nil {
+			panic(err)
+		}
+		defer conn.Close()
+		authKey, err := conn.GetAuthServerKey()
+		if err != nil {
+			panic(err)
+		}
+		if authKey == "" {
+			panic("auth key not present in the database")
+		}
+		tokenclaims, err := parseJWTtoken(tokenString, []byte(authKey))
+		if err != nil {
+			panic(err)
+		}
+
+		c.JSON(http.StatusOK, tokenclaims)
 	})
 
 	// Default set to port 8080
