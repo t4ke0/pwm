@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -218,4 +219,19 @@ WHERE username = $1`, username).Scan(&info.ID, &info.Password, &info.Key)
 		return info, err
 	}
 	return info, nil
+}
+
+// InsertNewSession
+func (d Db) InsertNewSession(sessionID, jwtToken string, userID int, createdAt time.Time) error {
+	result, err := d.conn.Exec(`
+INSERT INTO sessions(session_id, jwt_token, user_id, created_at, revoked)
+VALUES($1, $2, $3, $4, false)`, sessionID, jwtToken, userID, createdAt)
+	if err != nil {
+		return err
+	}
+	n, _ := result.RowsAffected()
+	if n == 0 {
+		return ErrInsertion
+	}
+	return nil
 }
