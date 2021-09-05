@@ -4,3 +4,4 @@ pwm_authenticator/run.sh
 pwm_authenticator/service
 pwm_db_api/cmd/
 todo.md
+*.swp
