@@ -187,3 +187,35 @@ WHERE username = $1
 	}
 	return false, nil
 }
+
+// EmailExists
+func (d Db) EmailExists(email string) (bool, error) {
+	var storedEmail string
+	var err = d.conn.QueryRow(`SELECT email from user_t where email = $1`, email).Scan(&storedEmail)
+	if err != nil && err != ErrNoRows {
+		return false, err
+	}
+	if storedEmail == "" {
+		return false, nil
+	}
+	return true, nil
+}
+
+type UserInfo struct {
+	ID  int
+	Key string
+
+	Password string
+}
+
+func (d Db) GetUserAuthInfo(username string) (UserInfo, error) {
+	var info UserInfo
+	err := d.conn.QueryRow(`
+SELECT id, password, key
+FROM user_t
+WHERE username = $1`, username).Scan(&info.ID, &info.Password, &info.Key)
+	if err != nil {
+		return info, err
+	}
+	return info, nil
+}
