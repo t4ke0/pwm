@@ -1,3 +1,9 @@
+-- DROP TABLE IF EXISTS user_t;
+-- DROP TABLE IF EXISTS sessions;
+-- DROP TABLE IF EXISTS passwords;
+-- DROP TABLE IF EXISTS server_encryption_key;
+-- DROP TABLE IF EXISTS server_auth_key;
+
 CREATE TABLE IF NOT EXISTS user_t (
    id SERIAL PRIMARY KEY,
    username VARCHAR unique not null,
@@ -10,6 +16,7 @@ CREATE TABLE IF NOT EXISTS sessions (
    session_id VARCHAR PRIMARY KEY,
    jwt_token VARCHAR not null,
    user_id INTEGER,
+   created_at TIMESTAMP,
    revoked boolean,
    FOREIGN KEY(user_id) REFERENCES user_t(id)
 );
