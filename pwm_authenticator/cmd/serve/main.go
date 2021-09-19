@@ -119,6 +119,18 @@ func main() {
 		}
 		sessionID := uuid.New().String()
 
+		grpcConn, err := dialKeysManager()
+		if err != nil {
+			panic(err)
+		}
+		defer grpcConn.Close()
+
+		keysManagerClient := keys_manager_pb.NewKeyManagerClient(grpcConn)
+		userKey, err := keysManagerClient.GetUserKey(context.TODO(), &keys_manager_pb.KeyFetchRequest{Username: req.Username.String()})
+		if err != nil {
+			panic(err)
+		}
+
 		authServerKey, err := conn.GetAuthServerKey()
 		if err != nil {
 			panic(err)
@@ -132,7 +144,7 @@ func main() {
 			UserID:       info.ID,
 			Username:     req.Username.String(),
 			SessionID:    sessionID,
-			SymmetricKey: info.Key,
+			SymmetricKey: userKey.Key,
 		})
 		if err != nil {
 			panic(err)
