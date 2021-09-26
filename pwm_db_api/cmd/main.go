@@ -50,7 +50,7 @@ func main() {
 		//			log.Fatal(err)
 		//		}
 		//		postgresLink = pqLink
-		wordsFilePath := "../../keys_manager/common/words.txt"
+		wordsFilePath := "../keys_manager/common/words.txt"
 		key, err := common.GenerateEncryptionKey(wordsFilePath, 0)
 		if err != nil {
 			log.Fatalf("Error generating server key %v", err)
