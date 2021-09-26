@@ -37,6 +37,5 @@ jobs:
       run: cd keys_manager && go test -v ./keys_manager_testing/.
 
     - name: init database.
-      run : cd pwm_db_api && ls -alth
-        #run: cd pwm_db_api && go build -o script cmd/main.go && ./script
+      run: cd pwm_db_api && go build -o script cmd/main.go && ./script
 
