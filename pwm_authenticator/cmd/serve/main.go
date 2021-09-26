@@ -82,6 +82,7 @@ func handleError(c *gin.Context) {
 }
 
 func main() {
+	const headerTokenKey string = "token"
 
 	engine := gin.Default()
 	engine.Use(cors.Default())
@@ -232,7 +233,7 @@ func main() {
 	})
 
 	engine.GET("/info", func(c *gin.Context) {
-		tokenString := c.GetHeader("token")
+		tokenString := c.GetHeader(headerTokenKey)
 		if tokenString == "" {
 			c.Status(http.StatusBadRequest)
 			return
@@ -257,6 +258,24 @@ func main() {
 		}
 
 		c.JSON(http.StatusOK, tokenclaims)
+	})
+
+	engine.POST("/logout", func(c *gin.Context) {
+		tokenAsStr := c.GetHeader(headerTokenKey)
+		conn, err := db.New(postgresLink)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		defer conn.Close()
+		if err := conn.RevokeSession(tokenAsStr); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
 	})
 
 	// Default set to port 8080
