@@ -43,5 +43,7 @@ jobs:
         POSTGRES_PASSWORD: postgres
         POSTGRES_DB: postgres
         POSTGRES_HOST: postgres
+        TEST: true
+        SCHEMA_FILE_PATH: ./schema.sql
       run: cd pwm_db_api && go build -o script cmd/main.go && ./script
 
