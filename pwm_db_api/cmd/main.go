@@ -1,0 +1,75 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"os"
+
+	"google.golang.org/grpc"
+
+	keys_manager_pb "github.com/t4ke0/pwm/keys_manager/proto"
+
+	db "github.com/t4ke0/pwm/pwm_db_api"
+)
+
+func main() {
+	var (
+		postgresPW   = os.Getenv("POSTGRES_PASSWORD")
+		postgresDB   = os.Getenv("POSTGRES_DATABASE")
+		postgresUser = os.Getenv("POSTGRES_USER")
+		postgresHost = os.Getenv("POSTGRES_HOST")
+
+		postgresLink = fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable",
+			postgresUser,
+			postgresPW,
+			postgresHost,
+			postgresDB)
+		//
+		keysManagerHost = os.Getenv("KEYS_MANAGER_HOST")
+	)
+	if os.Getenv("TEST") == "true" {
+		pqLink, err := db.CreateTestingDatabase(postgresLink)
+		if err != nil {
+			log.Fatal(err)
+		}
+		postgresLink = pqLink
+	}
+
+	log.Printf("DEBUG postgres Link [%v]", postgresLink)
+
+	// When starting inital the database. support [prod & test] env
+	conn, err := db.New(postgresLink)
+	if err != nil {
+		log.Fatalf("Couldn't connect to the Database %v", err)
+	}
+	defer conn.Close()
+	db.SchemaFile = os.Getenv("SCHEMA_FILE_PATH")
+	if err := conn.InitDB(); err != nil {
+		log.Fatalf("Couldn't init the Database %v", err)
+	}
+	log.Printf("DEBUG initialized DB successfully!")
+
+	serverKey, err := conn.GetServerEncryptionKey()
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("DEBUG %v", serverKey == "")
+	if serverKey == "" {
+		grpcConn, err := grpc.Dial(keysManagerHost, grpc.WithInsecure())
+		if err != nil {
+			log.Fatalf("GRPC ERROR: %v", err)
+		}
+		defer grpcConn.Close()
+		client := keys_manager_pb.NewKeyManagerClient(grpcConn)
+		key, err := client.GenKey(context.TODO(), &keys_manager_pb.KeyGenRequest{
+			Mode: keys_manager_pb.Mode_Server,
+		})
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("DEBUG gen server key %v", key.Key)
+		return
+	}
+	log.Printf("DEBUG: server key %v", serverKey)
+}
