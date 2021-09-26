@@ -235,3 +235,16 @@ VALUES($1, $2, $3, $4, false)`, sessionID, jwtToken, userID, createdAt)
 	}
 	return nil
 }
+
+// RevokeSession revoke a session given the jwt token and returns an error.
+func (d Db) RevokeSession(jwtToken string) error {
+	_, err := d.conn.Exec(
+		`
+UPDATE sessions SET revoked = true
+WHERE jwt_token = $1
+`, jwtToken)
+	if err != nil {
+		return err
+	}
+	return nil
+}
