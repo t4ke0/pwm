@@ -8,6 +8,7 @@ import (
 
 	"google.golang.org/grpc"
 
+	"github.com/t4ke0/pwm/keys_manager/common"
 	keys_manager_pb "github.com/t4ke0/pwm/keys_manager/proto"
 
 	db "github.com/t4ke0/pwm/pwm_db_api"
@@ -28,13 +29,6 @@ func main() {
 		//
 		keysManagerHost = os.Getenv("KEYS_MANAGER_HOST")
 	)
-	if os.Getenv("TEST") == "true" {
-		pqLink, err := db.CreateTestingDatabase(postgresLink)
-		if err != nil {
-			log.Fatal(err)
-		}
-		postgresLink = pqLink
-	}
 
 	log.Printf("DEBUG postgres Link [%v]", postgresLink)
 
@@ -49,6 +43,23 @@ func main() {
 		log.Fatalf("Couldn't init the Database %v", err)
 	}
 	log.Printf("DEBUG initialized DB successfully!")
+
+	if os.Getenv("TEST") == "true" {
+		//		pqLink, err := db.CreateTestingDatabase(postgresLink)
+		//		if err != nil {
+		//			log.Fatal(err)
+		//		}
+		//		postgresLink = pqLink
+		wordsFilePath := "../../keys_manager/common/words.txt"
+		key, err := common.GenerateEncryptionKey(wordsFilePath, 0)
+		if err != nil {
+			log.Fatalf("Error generating server key %v", err)
+		}
+		if err := conn.StoreServerKey(key.String()); err != nil {
+			log.Fatalf("Error storing server key into database %v", err)
+		}
+
+	}
 
 	serverKey, err := conn.GetServerEncryptionKey()
 	if err != nil {
