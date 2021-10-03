@@ -43,6 +43,17 @@ func dialKeysManager() (*grpc.ClientConn, error) {
 }
 
 func init() {
+	if os.Getenv("LOCAL_TEST") == "true" {
+		testpostgresURL, err := db.CreateTestingDatabase(postgresLink)
+		if err != nil {
+			log.Fatalf("couldn't setup testing database %v", err)
+		}
+		if err := db.ClearTestTables(); err != nil {
+			log.Fatalf("couldn't clear test tables %v", err)
+		}
+		postgresLink = testpostgresURL
+	}
+
 	conn, err := db.New(postgresLink)
 	if err != nil {
 		log.Fatal(err)
