@@ -48,7 +48,11 @@ func init() {
 		if err != nil {
 			log.Fatalf("couldn't setup testing database %v", err)
 		}
-		if err := db.ClearTestTables(); err != nil {
+		conn, err := db.New(testpostgresURL)
+		if err != nil {
+			log.Fatalf("couldn't dial postgres database %v", err)
+		}
+		if err := conn.ClearTestTables(); err != nil {
 			log.Fatalf("couldn't clear test tables %v", err)
 		}
 		postgresLink = testpostgresURL
