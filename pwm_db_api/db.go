@@ -65,6 +65,18 @@ WHERE datname = $1`, testDbName).Scan(&testDBExist); err != nil && err != sql.Er
 	return testDbPath, nil
 }
 
+// ClearTestTables remove testing tables.
+func (d Db) ClearTestTables() error {
+	_, err := d.conn.Exec(`
+DELETE FROM sessions;
+DELETE FROM passwords;
+DELETE FROM user_t;
+DELETE FROM server_encryption_key;
+DELETE FROM server_auth_key;
+`)
+	return err
+}
+
 // InitDB initializes the tables.
 func (d Db) InitDB() error {
 	data, err := os.ReadFile(SchemaFile)
