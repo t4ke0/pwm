@@ -17,7 +17,7 @@ services:
       - POSTGRES_PASSWORD=$db_password
       - POSTGRES_HOST=db
       - POSTGRES_DATABASE=postgres
-      - TEST=$TEST
+      - LOCAL_TEST=$LOCAL_TEST
     build: ./keys_manager/.
     ports:
       - "9090:9090"
@@ -32,6 +32,7 @@ services:
       - POSTGRES_DATABASE=postgres
       - KEYS_MANAGER_HOST=key-manager
       - KEYS_MANAGER_PORT=9090
+      - LOCAL_TEST=$LOCAL_TEST
     build: ./pwm_authenticator/.
     ports:
       - "8080:8080"
@@ -45,7 +46,7 @@ services:
       - POSTGRES_HOST=db
       - POSTGRES_DATABASE=postgres
       - KEYS_MANAGER_HOST=key-manager:9090
-      - TEST=$TEST
+      - LOCAL_TEST=$LOCAL_TEST
     build: ./pwm_db_api/.
     networks: ["custom-net"]
     depends_on:
