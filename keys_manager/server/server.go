@@ -32,7 +32,7 @@ var (
 		postgresHost,
 		postgresDB)
 	//
-	test   = os.Getenv("TEST")
+	test   = os.Getenv("LOCAL_TEST")
 	isTest = (test == "true")
 )
 
