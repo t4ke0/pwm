@@ -92,12 +92,14 @@ func handleError(c *gin.Context) {
 	}
 }
 
-func main() {
+var engine *gin.Engine
+
+func setupGinEngine() {
+
 	const headerTokenKey string = "token"
 
-	engine := gin.Default()
+	engine = gin.Default()
 	engine.Use(cors.Default())
-
 	engine.POST("/login", func(c *gin.Context) {
 		var req api.AuthRequest
 		defer handleError(c)
@@ -149,7 +151,7 @@ func main() {
 		}
 
 		if authServerKey == "" {
-			panic("no auth server key in the database")
+			panic(fmt.Errorf("no auth server key in the database"))
 		}
 
 		jwtToken, err := getNewJWTtoken([]byte(authServerKey), tokenClaims{
@@ -172,6 +174,7 @@ func main() {
 	engine.POST("/register", func(c *gin.Context) {
 		var req api.RegisterRequest
 		if err := c.BindJSON(&req); err != nil {
+			log.Printf("debug error %v", err)
 			c.String(http.StatusInternalServerError, "Error: [%v]", err)
 			return
 		}
@@ -179,14 +182,17 @@ func main() {
 			c.Status(http.StatusBadRequest)
 			return
 		}
+		log.Printf("debug %v", postgresLink)
 		conn, err := db.New(postgresLink)
 		if err != nil {
+			log.Printf("debug error %v", err)
 			c.String(http.StatusInternalServerError, "PSQL conn: [%v]", err)
 			return
 		}
 		defer conn.Close()
 		ok, err := conn.UserExists(req.Username.String())
 		if err != nil {
+			log.Printf("debug error %v", err)
 			c.String(http.StatusInternalServerError, "Check User existance: [%v]", err)
 			return
 		}
@@ -197,6 +203,7 @@ func main() {
 
 		emailExists, err := conn.EmailExists(req.Email.String())
 		if err != nil {
+			log.Printf("debug error %v", err)
 			c.String(http.StatusInternalServerError, "Check Email existance [%v]", err)
 			return
 		}
@@ -208,6 +215,7 @@ func main() {
 		// Generate an encryption key for the user.
 		clientConn, err := dialKeysManager()
 		if err != nil {
+			log.Printf("debug error %v", err)
 			c.String(http.StatusInternalServerError, "GRPC [error] (%v)", err)
 			return
 		}
@@ -219,6 +227,7 @@ func main() {
 				Mode: keys_manager_pb.Mode_User,
 			})
 		if err != nil {
+			log.Printf("debug error %v", err)
 			c.String(http.StatusInternalServerError, "GRPC [error] (%v)", err)
 			return
 		}
@@ -261,7 +270,7 @@ func main() {
 			panic(err)
 		}
 		if authKey == "" {
-			panic("auth key not present in the database")
+			panic(fmt.Errorf("auth key not present in the database"))
 		}
 		tokenclaims, err := parseJWTtoken(tokenString, []byte(authKey))
 		if err != nil {
@@ -289,6 +298,11 @@ func main() {
 		}
 	})
 
+}
+
+func main() {
+
+	setupGinEngine()
 	// Default set to port 8080
 	engine.Run()
 }
