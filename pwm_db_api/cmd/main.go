@@ -32,6 +32,17 @@ func main() {
 
 	log.Printf("DEBUG postgres Link [%v]", postgresLink)
 
+	// If LOCAL_TEST
+	if os.Getenv("LOCAL_TEST") == "true" {
+		pqLink, err := db.CreateTestingDatabase(postgresLink)
+		if err != nil {
+			log.Fatal(err)
+		}
+		postgresLink = pqLink
+	}
+
+	log.Printf("debug postgresLink %v", postgresLink)
+
 	// When starting inital the database. support [prod & test] env
 	conn, err := db.New(postgresLink)
 	if err != nil {
@@ -42,14 +53,11 @@ func main() {
 	if err := conn.InitDB(); err != nil {
 		log.Fatalf("Couldn't init the Database %v", err)
 	}
+
 	log.Printf("DEBUG initialized DB successfully!")
 
+	// If TEST in CI
 	if os.Getenv("TEST") == "true" {
-		//		pqLink, err := db.CreateTestingDatabase(postgresLink)
-		//		if err != nil {
-		//			log.Fatal(err)
-		//		}
-		//		postgresLink = pqLink
 		wordsFilePath := "../keys_manager/common/words.txt"
 		key, err := common.GenerateEncryptionKey(wordsFilePath, 0)
 		if err != nil {
@@ -65,7 +73,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("DEBUG %v", serverKey == "")
+
+	log.Printf("DEBUG server key doesn't already exists %v", serverKey == "")
+
 	if serverKey == "" {
 		grpcConn, err := grpc.Dial(keysManagerHost, grpc.WithInsecure())
 		if err != nil {
@@ -82,5 +92,6 @@ func main() {
 		log.Printf("DEBUG gen server key %v", key.Key)
 		return
 	}
+
 	log.Printf("DEBUG: server key %v", serverKey)
 }
