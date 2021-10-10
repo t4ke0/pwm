@@ -258,3 +258,46 @@ WHERE jwt_token = $1
 	}
 	return nil
 }
+
+// Passwords structure that holds the user password's fields.
+type Passwords struct {
+	ID                int
+	EncryptedPassword string
+	Category          string
+	Site              string
+
+	err error
+}
+
+// GetUserPasswords get user passwords returns a channel of Passwords type.
+func (d Db) GetUserPasswords(userID int) (<-chan Passwords, error) {
+
+	rows, err := d.conn.Query(
+		`
+SELECT id, password, category, site
+FROM passwords
+WHERE user_id = $1`, userID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	out := make(chan Passwords)
+
+	go func() {
+		defer close(out)
+		defer rows.Close()
+		for rows.Next() {
+			var pw Passwords
+			if err := rows.Scan(&pw.ID, &pw.EncryptedPassword,
+				&pw.Category, &pw.Site); err != nil {
+				pw.err = err
+				out <- pw
+				return
+			}
+			out <- pw
+		}
+	}()
+
+	return out, nil
+}
