@@ -67,6 +67,8 @@ github.com/t4ke0/pwm/pwm_db_api v0.0.0-20210926141415-0d885a00dbbf h1:/2G555orLf
 github.com/t4ke0/pwm/pwm_db_api v0.0.0-20210926141415-0d885a00dbbf/go.mod h1:m4wKS5qFVN7svsRpUEg/GkofPYBfsvahiFaB0pNFuJs=
 github.com/t4ke0/pwm/pwm_db_api v0.0.0-20211003145651-7796dd861ef8 h1:uMedtfim+SXjSEIEcZeR16WLnZ8Q8b14OXx/ZaIHaXE=
 github.com/t4ke0/pwm/pwm_db_api v0.0.0-20211003145651-7796dd861ef8/go.mod h1:m4wKS5qFVN7svsRpUEg/GkofPYBfsvahiFaB0pNFuJs=
+github.com/t4ke0/pwm/pwm_db_api v0.0.0-20211010185510-3a3c31c32cfe h1:ouRAJFLL1b06dD3p6agK4TurfEESAGc+4v7aeigH7Ro=
+github.com/t4ke0/pwm/pwm_db_api v0.0.0-20211010185510-3a3c31c32cfe/go.mod h1:m4wKS5qFVN7svsRpUEg/GkofPYBfsvahiFaB0pNFuJs=
 go.opentelemetry.io/proto/otlp v0.7.0/go.mod h1:PqfVotwruBrMGOCsRd/89rSnXhoiJIqeYNgFYFoEGnI=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
