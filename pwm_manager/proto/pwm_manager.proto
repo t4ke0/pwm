@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "github.com/t4ke0/pwm/pwm_manager/proto";
+
+
+service Manager {
+    rpc StorePassword(ManagerRequest) returns (Empty) ;
+    rpc UpdatePassword(ManagerUpdateRequest) returns (PasswordItem);
+    rpc GetPasswords(GetPasswordsRequest) returns (UserPasswords);
+    rpc GeneratePassword(GeneratePasswordRequest) returns (GeneratedPassword);
+}
+
+message Empty {
+}
+
+enum PasswordMode {
+    Easy    = 0;
+    Medium  = 1;
+    Complex = 2;
+}
+
+message GeneratedPassword {
+    string Password = 1;
+}
+
+message GeneratePasswordRequest {
+    int64 Length      = 1;
+    PasswordMode Mode = 2;
+}
+
+message ManagerRequest {
+    string JwtToken       = 1;
+    PasswordData Password = 2;
+}
+
+message PasswordData {
+    string ClearTextPassword = 1;
+    string Category          = 2;
+    string Site              = 3;
+}
+
+enum ItemToUpdate {
+    Password = 0;
+    Category = 1;
+    Site     = 2;
+}
+
+message ManagerUpdateRequest {
+    string JwtToken   = 1;
+    int64  PasswordID = 2;
+    ItemToUpdate Mode = 3;
+}
+
+message PasswordItem {
+    int64 PasswordID  = 1;
+    PasswordData Data = 2;
+}
+
+message UserPasswords {
+    repeated PasswordItem Passwords = 1;
+}
+
+message GetPasswordsRequest {
+    string JwtToken = 1;
+}
