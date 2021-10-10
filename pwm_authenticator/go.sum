@@ -109,6 +109,8 @@ github.com/t4ke0/pwm/pwm_db_api v0.0.0-20210926141415-0d885a00dbbf h1:/2G555orLf
 github.com/t4ke0/pwm/pwm_db_api v0.0.0-20210926141415-0d885a00dbbf/go.mod h1:m4wKS5qFVN7svsRpUEg/GkofPYBfsvahiFaB0pNFuJs=
 github.com/t4ke0/pwm/pwm_db_api v0.0.0-20211003145651-7796dd861ef8 h1:uMedtfim+SXjSEIEcZeR16WLnZ8Q8b14OXx/ZaIHaXE=
 github.com/t4ke0/pwm/pwm_db_api v0.0.0-20211003145651-7796dd861ef8/go.mod h1:m4wKS5qFVN7svsRpUEg/GkofPYBfsvahiFaB0pNFuJs=
+github.com/t4ke0/pwm/pwm_db_api v0.0.0-20211010185510-3a3c31c32cfe h1:ouRAJFLL1b06dD3p6agK4TurfEESAGc+4v7aeigH7Ro=
+github.com/t4ke0/pwm/pwm_db_api v0.0.0-20211010185510-3a3c31c32cfe/go.mod h1:m4wKS5qFVN7svsRpUEg/GkofPYBfsvahiFaB0pNFuJs=
 github.com/ugorji/go v1.1.7 h1:/68gy2h+1mWMrwZFeD1kQialdSzAb432dtpeJ42ovdo=
 github.com/ugorji/go v1.1.7/go.mod h1:kZn38zHttfInRq0xu/PH0az30d+z6vm202qpg1oXVMw=
 github.com/ugorji/go/codec v1.1.7 h1:2SvQaVZ1ouYrrKKwoSk2pzd4A9evlKJb9oTL+OaLUSs=
