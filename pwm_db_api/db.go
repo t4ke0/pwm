@@ -71,8 +71,6 @@ func (d Db) ClearTestTables() error {
 DELETE FROM sessions;
 DELETE FROM passwords;
 DELETE FROM user_t;
-DELETE FROM server_encryption_key;
-DELETE FROM server_auth_key;
 `)
 	return err
 }
