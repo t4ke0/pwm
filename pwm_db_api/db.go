@@ -320,3 +320,43 @@ func (d Db) StoreUserPassword(userID int, password Passwords) error {
 
 	return nil
 }
+
+type ElementToUpdate string
+
+const (
+	Password ElementToUpdate = "password"
+	Category                 = "category"
+	Site                     = "site"
+)
+
+// UpdateUserPassword update password Element of the user.
+func (d Db) UpdateUserPassword(userID, passwordID int, itemsToUpdate map[ElementToUpdate]string) error {
+
+	var (
+		query     string = "UPDATE passwords set("
+		values    []interface{}
+		valsQuery string = "VALUES("
+	)
+	count := 0
+	for k, v := range itemsToUpdate {
+		query += fmt.Sprintf("%s", k)
+		valsQuery += fmt.Sprintf("$%d", count+1)
+		if count != len(itemsToUpdate)-1 {
+			query += ","
+			valsQuery += ","
+		} else {
+			query += ")"
+			valsQuery += ")"
+		}
+		values = append(values, v)
+		count++
+	}
+	query = fmt.Sprintf("%s %s WHERE user_id = $%d AND id = $%d ", query, valsQuery, count+1, count+2)
+
+	values = append(values, userID, passwordID)
+	_, err := d.conn.Exec(query, values...)
+	if err != nil {
+		return err
+	}
+	return nil
+}
