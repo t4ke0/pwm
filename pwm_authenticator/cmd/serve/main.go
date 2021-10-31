@@ -48,13 +48,14 @@ func init() {
 		if err != nil {
 			log.Fatalf("couldn't setup testing database %v", err)
 		}
-		conn, err := db.New(testpostgresURL)
-		if err != nil {
-			log.Fatalf("couldn't dial postgres database %v", err)
-		}
-		if err := conn.ClearTestTables(); err != nil {
-			log.Fatalf("couldn't clear test tables %v", err)
-		}
+		// TODO: fix this
+		//		conn, err := db.New(testpostgresURL)
+		//		if err != nil {
+		//			log.Fatalf("couldn't dial postgres database %v", err)
+		//		}
+		//		if err := conn.ClearTestTables(); err != nil {
+		//			log.Fatalf("couldn't clear test tables %v", err)
+		//		}
 		postgresLink = testpostgresURL
 	}
 
@@ -101,6 +102,8 @@ var engine *gin.Engine
 func setupGinEngine() {
 
 	const headerTokenKey string = "token"
+
+	// TODO: add /restore/password endpoint.
 
 	engine = gin.Default()
 	engine.Use(cors.Default())
