@@ -123,12 +123,49 @@ func (ms *managerServer) StorePassword(ctx context.Context, req *pb.ManagerReque
 	if err != nil {
 		return nil, err
 	}
+	defer conn.Close()
 
 	if err := conn.StoreUserPassword(claims.UserID, db.Passwords{
 		EncryptedPassword: hex.EncodeToString(encryptedPassword),
 		Category:          req.Password.Category,
 		Site:              req.Password.Site,
 	}); err != nil {
+		return nil, err
+	}
+	return nil, nil
+}
+
+func (ms *managerServer) UpdatePassword(ctx context.Context, req *pb.ManagerUpdateRequest) (*pb.Empty, error) {
+	if len(req.Mode) != len(req.Value) {
+		return nil, fmt.Errorf("amount of values is not the same as the amount of the items to update")
+	}
+
+	conn, err := db.New(postgresURL)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	claims, err := getTokenInfo(req.JwtToken)
+	if err != nil {
+		return nil, err
+	}
+
+	var itemToUpdate = map[db.ElementToUpdate]string{}
+
+	for index, v := range req.Mode {
+		item := pb.ItemToUpdate_name[int32(v)]
+		switch item {
+		case "Password":
+			itemToUpdate[db.Password] = req.Value[index]
+		case "Category":
+			itemToUpdate[db.Category] = req.Value[index]
+		case "Site":
+			itemToUpdate[db.Site] = req.Value[index]
+		}
+	}
+
+	if err := conn.UpdateUserPassword(claims.UserID, int(req.PasswordID), itemToUpdate); err != nil {
 		return nil, err
 	}
 	return nil, nil
