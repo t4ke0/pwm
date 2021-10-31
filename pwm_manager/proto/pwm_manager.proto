@@ -7,7 +7,7 @@ option go_package = "github.com/t4ke0/pwm/pwm_manager/proto";
 
 service Manager {
     rpc StorePassword(ManagerRequest) returns (Empty) ;
-    rpc UpdatePassword(ManagerUpdateRequest) returns (PasswordItem);
+    rpc UpdatePassword(ManagerUpdateRequest) returns (Empty);
     rpc GetPasswords(GetPasswordsRequest) returns (UserPasswords);
     rpc GeneratePassword(GeneratePasswordRequest) returns (GeneratedPassword);
 }
@@ -48,9 +48,10 @@ enum ItemToUpdate {
 }
 
 message ManagerUpdateRequest {
-    string JwtToken   = 1;
-    int64  PasswordID = 2;
-    ItemToUpdate Mode = 3;
+    string                JwtToken   = 1;
+    int64                 PasswordID = 2;
+    repeated ItemToUpdate Mode       = 3;
+    repeated string       Value      = 4;
 }
 
 message PasswordItem {

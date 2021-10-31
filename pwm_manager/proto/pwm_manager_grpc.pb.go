@@ -19,7 +19,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ManagerClient interface {
 	StorePassword(ctx context.Context, in *ManagerRequest, opts ...grpc.CallOption) (*Empty, error)
-	UpdatePassword(ctx context.Context, in *ManagerUpdateRequest, opts ...grpc.CallOption) (*PasswordItem, error)
+	UpdatePassword(ctx context.Context, in *ManagerUpdateRequest, opts ...grpc.CallOption) (*Empty, error)
 	GetPasswords(ctx context.Context, in *GetPasswordsRequest, opts ...grpc.CallOption) (*UserPasswords, error)
 	GeneratePassword(ctx context.Context, in *GeneratePasswordRequest, opts ...grpc.CallOption) (*GeneratedPassword, error)
 }
@@ -41,8 +41,8 @@ func (c *managerClient) StorePassword(ctx context.Context, in *ManagerRequest, o
 	return out, nil
 }
 
-func (c *managerClient) UpdatePassword(ctx context.Context, in *ManagerUpdateRequest, opts ...grpc.CallOption) (*PasswordItem, error) {
-	out := new(PasswordItem)
+func (c *managerClient) UpdatePassword(ctx context.Context, in *ManagerUpdateRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/proto.Manager/UpdatePassword", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -73,7 +73,7 @@ func (c *managerClient) GeneratePassword(ctx context.Context, in *GeneratePasswo
 // for forward compatibility
 type ManagerServer interface {
 	StorePassword(context.Context, *ManagerRequest) (*Empty, error)
-	UpdatePassword(context.Context, *ManagerUpdateRequest) (*PasswordItem, error)
+	UpdatePassword(context.Context, *ManagerUpdateRequest) (*Empty, error)
 	GetPasswords(context.Context, *GetPasswordsRequest) (*UserPasswords, error)
 	GeneratePassword(context.Context, *GeneratePasswordRequest) (*GeneratedPassword, error)
 	mustEmbedUnimplementedManagerServer()
@@ -86,7 +86,7 @@ type UnimplementedManagerServer struct {
 func (UnimplementedManagerServer) StorePassword(context.Context, *ManagerRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StorePassword not implemented")
 }
-func (UnimplementedManagerServer) UpdatePassword(context.Context, *ManagerUpdateRequest) (*PasswordItem, error) {
+func (UnimplementedManagerServer) UpdatePassword(context.Context, *ManagerUpdateRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdatePassword not implemented")
 }
 func (UnimplementedManagerServer) GetPasswords(context.Context, *GetPasswordsRequest) (*UserPasswords, error) {
