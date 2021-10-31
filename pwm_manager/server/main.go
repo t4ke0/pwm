@@ -51,31 +51,8 @@ type managerServer struct {
 func (ms *managerServer) GetPasswords(ctx context.Context,
 	request *pb.GetPasswordsRequest) (*pb.UserPasswords, error) {
 
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/info", authenticatorAddress), nil)
+	claims, err := getTokenInfo(request.JwtToken)
 	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("token", request.JwtToken)
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, getJWTinfoError
-	}
-
-	defer resp.Body.Close()
-
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	var claims api.TokenClaims
-	if err := json.Unmarshal(data, &claims); err != nil {
 		return nil, err
 	}
 
@@ -127,6 +104,34 @@ func (ms *managerServer) decryptUserPassword(passwdChan <-chan db.Passwords) (*p
 
 	}
 	return passwds, nil
+}
+
+// StorePassword store user password
+func (ms *managerServer) StorePassword(ctx context.Context, req *pb.ManagerRequest) (*pb.Empty, error) {
+	claims, err := getTokenInfo(req.JwtToken)
+	if err != nil {
+		return nil, err
+	}
+
+	userKey := claims.SymmetricKey
+	encryptedPassword, err := passwords.EncryptPassword([]byte(userKey), []byte(req.Password.ClearTextPassword))
+	if err != nil {
+		return nil, err
+	}
+
+	conn, err := db.New(postgresURL)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := conn.StoreUserPassword(claims.UserID, db.Passwords{
+		EncryptedPassword: hex.EncodeToString(encryptedPassword),
+		Category:          req.Password.Category,
+		Site:              req.Password.Site,
+	}); err != nil {
+		return nil, err
+	}
+	return nil, nil
 }
 
 func getTokenInfo(jwtToken string) (api.TokenClaims, error) {
