@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/dgrijalva/jwt-go/v4"
 )
@@ -43,7 +42,7 @@ func parseJWTtoken(tokenString string, authServerKey []byte) (tokenClaims, error
 	if !token.Valid {
 		return tokenClaims{}, fmt.Errorf("token not valid")
 	}
-	log.Printf("debug: %v", claims)
+	// log.Printf("debug: %v", claims)
 	return tokenClaims{
 		UserID:       int(claims["userid"].(float64)),
 		Username:     claims["username"].(string),
