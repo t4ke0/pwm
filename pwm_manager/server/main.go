@@ -129,6 +129,36 @@ func (ms *managerServer) decryptUserPassword(passwdChan <-chan db.Passwords) (*p
 	return passwds, nil
 }
 
+func getTokenInfo(jwtToken string) (api.TokenClaims, error) {
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/info", authenticatorAddress), nil)
+	if err != nil {
+		return api.TokenClaims{}, err
+	}
+	req.Header.Set("token", jwtToken)
+
+	client := new(http.Client)
+	resp, err := client.Do(req)
+	if err != nil {
+		return api.TokenClaims{}, err
+	}
+
+	defer resp.Body.Close()
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return api.TokenClaims{}, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return api.TokenClaims{}, fmt.Errorf("failed to get token info [%v] [%v]", resp.StatusCode, string(data))
+	}
+
+	var claims api.TokenClaims
+	err = json.Unmarshal(data, &claims)
+
+	return claims, err
+}
+
 const serviceAddress = ":8989"
 
 func main() {
