@@ -301,3 +301,22 @@ WHERE user_id = $1`, userID)
 
 	return out, nil
 }
+
+// StoreUserPassword stores user password into passwords table. accepts userID
+// and encrypted user password and returns an error if exists.
+func (d Db) StoreUserPassword(userID int, password Passwords) error {
+	result, err := d.conn.Exec(
+		`INSERT INTO passwords(user_id, password, category, site)
+ 			VALUES($1, $2, $3, $4)`, userID, password.EncryptedPassword,
+		password.Category, password.Site)
+
+	if err != nil {
+		return err
+	}
+
+	if n, _ := result.RowsAffected(); n == 0 {
+		return ErrInsertion
+	}
+
+	return nil
+}
