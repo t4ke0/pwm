@@ -47,3 +47,5 @@ jobs:
         SCHEMA_FILE_PATH: ./schema.sql
       run: cd pwm_db_api && go build -o script cmd/main.go && ./script
 
+    - name: jwt test
+      run: cd pwm_authenticator/cmd/serve && go test -v jwt_token_test.go jwt_token.go
