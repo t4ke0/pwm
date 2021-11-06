@@ -97,6 +97,7 @@ func (ms *managerServer) decryptUserPassword(passwdChan <-chan db.Passwords) (*p
 			PasswordID: int64(p.ID),
 			Data: &pb.PasswordData{
 				ClearTextPassword: string(pw),
+				Username:          p.Username,
 				Category:          p.Category,
 				Site:              p.Site,
 			},
@@ -127,6 +128,7 @@ func (ms *managerServer) StorePassword(ctx context.Context, req *pb.ManagerReque
 
 	if err := conn.StoreUserPassword(claims.UserID, db.Passwords{
 		EncryptedPassword: hex.EncodeToString(encryptedPassword),
+		Username:          req.Password.Username,
 		Category:          req.Password.Category,
 		Site:              req.Password.Site,
 	}); err != nil {
@@ -135,6 +137,7 @@ func (ms *managerServer) StorePassword(ctx context.Context, req *pb.ManagerReque
 	return nil, nil
 }
 
+// UpdatePassword update user credentials `username, password, etc ....`
 func (ms *managerServer) UpdatePassword(ctx context.Context, req *pb.ManagerUpdateRequest) (*pb.Empty, error) {
 	if len(req.Mode) != len(req.Value) {
 		return nil, fmt.Errorf("amount of values is not the same as the amount of the items to update")
@@ -157,11 +160,21 @@ func (ms *managerServer) UpdatePassword(ctx context.Context, req *pb.ManagerUpda
 		item := pb.ItemToUpdate_name[int32(v)]
 		switch item {
 		case "Password":
-			itemToUpdate[db.Password] = req.Value[index]
+			userEncryptionKey, err := hex.DecodeString(claims.SymmetricKey)
+			if err != nil {
+				return nil, err
+			}
+			encryptedNewPassword, err := passwords.EncryptPassword(userEncryptionKey, []byte(req.Value[index]))
+			if err != nil {
+				return nil, err
+			}
+			itemToUpdate[db.Password] = hex.EncodeToString(encryptedNewPassword)
 		case "Category":
 			itemToUpdate[db.Category] = req.Value[index]
 		case "Site":
 			itemToUpdate[db.Site] = req.Value[index]
+		case "Username":
+			itemToUpdate[db.Username] = req.Value[index]
 		}
 	}
 
