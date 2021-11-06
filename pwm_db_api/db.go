@@ -263,6 +263,7 @@ WHERE jwt_token = $1
 type Passwords struct {
 	ID                int
 	EncryptedPassword string
+	Username          string
 	Category          string
 	Site              string
 
@@ -274,7 +275,7 @@ func (d Db) GetUserPasswords(userID int) (<-chan Passwords, error) {
 
 	rows, err := d.conn.Query(
 		`
-SELECT id, password, category, site
+SELECT id, password, username, category, site
 FROM passwords
 WHERE user_id = $1`, userID)
 
@@ -289,7 +290,7 @@ WHERE user_id = $1`, userID)
 		defer rows.Close()
 		for rows.Next() {
 			var pw Passwords
-			if err := rows.Scan(&pw.ID, &pw.EncryptedPassword,
+			if err := rows.Scan(&pw.ID, &pw.EncryptedPassword, &pw.Username,
 				&pw.Category, &pw.Site); err != nil {
 				pw.err = err
 				out <- pw
@@ -306,8 +307,8 @@ WHERE user_id = $1`, userID)
 // and encrypted user password and returns an error if exists.
 func (d Db) StoreUserPassword(userID int, password Passwords) error {
 	result, err := d.conn.Exec(
-		`INSERT INTO passwords(user_id, password, category, site)
- 			VALUES($1, $2, $3, $4)`, userID, password.EncryptedPassword,
+		`INSERT INTO passwords(user_id, password, username, category, site)
+ 			VALUES($1, $2, $3, $4)`, userID, password.EncryptedPassword, password.Username,
 		password.Category, password.Site)
 
 	if err != nil {
@@ -325,6 +326,7 @@ type ElementToUpdate string
 
 const (
 	Password ElementToUpdate = "password"
+	Username                 = "username"
 	Category                 = "category"
 	Site                     = "site"
 )

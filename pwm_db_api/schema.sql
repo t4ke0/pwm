@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS passwords (
    id SERIAL PRIMARY KEY,
    user_id INTEGER not null,
    password VARCHAR not null,
+   username VARCHAR,
    category TEXT,
    site TEXT,
    FOREIGN KEY(user_id) REFERENCES user_t(id)
