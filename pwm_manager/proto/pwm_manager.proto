@@ -37,14 +37,16 @@ message ManagerRequest {
 
 message PasswordData {
     string ClearTextPassword = 1;
-    string Category          = 2;
-    string Site              = 3;
+    string Username          = 2;
+    string Category          = 3;
+    string Site              = 4;
 }
 
 enum ItemToUpdate {
-    Password = 0;
-    Category = 1;
-    Site     = 2;
+    Username = 0;
+    Password = 1;
+    Category = 2;
+    Site     = 3;
 }
 
 message ManagerUpdateRequest {
