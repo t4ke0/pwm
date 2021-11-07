@@ -18,6 +18,7 @@ import (
 
 	db "github.com/t4ke0/pwm/pwm_db_api"
 	"github.com/t4ke0/pwm/pwm_manager/passwords"
+	generator "github.com/t4ke0/pwm/pwm_manager/pw_generator"
 	"github.com/t4ke0/pwm/pwm_manager/server/api"
 )
 
@@ -212,6 +213,17 @@ func getTokenInfo(jwtToken string) (api.TokenClaims, error) {
 	err = json.Unmarshal(data, &claims)
 
 	return claims, err
+}
+
+// GeneratedPassword generates passwords
+func (ms *managerServer) GeneratePassword(ctx context.Context, req *pb.GeneratePasswordRequest) (*pb.GeneratedPassword, error) {
+	pw, err := generator.Generate(int(req.Length), req.Mode)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.GeneratedPassword{
+		Password: pw,
+	}, nil
 }
 
 const serviceAddress = ":8989"
