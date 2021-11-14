@@ -15,6 +15,7 @@ var SchemaFile = "schema.sql"
 var (
 	ErrNoRows    = sql.ErrNoRows
 	ErrInsertion = errors.New("couldn't insert value")
+	ErrConflict  = errors.New("record already exists")
 )
 
 // Db
@@ -306,6 +307,21 @@ WHERE user_id = $1`, userID)
 // StoreUserPassword stores user password into passwords table. accepts userID
 // and encrypted user password and returns an error if exists.
 func (d Db) StoreUserPassword(userID int, password Passwords) error {
+	var testStoredPassword struct {
+		username string
+		category string
+		site     string
+	}
+	err := d.conn.QueryRow(`
+SELECT username, category, site
+FROM passwords WHERE username = $1 AND category = $2 AND site = $3
+	`, password.Username, password.Category, password.Site).Scan(&testStoredPassword.username, &testStoredPassword.category, &testStoredPassword.site)
+	if err != nil && err != ErrNoRows {
+		return err
+	}
+	if testStoredPassword.username != "" && testStoredPassword.category != "" && testStoredPassword.site != "" {
+		return ErrConflict
+	}
 	result, err := d.conn.Exec(
 		`INSERT INTO passwords(user_id, password, username, category, site)
  			VALUES($1, $2, $3, $4, $5)`, userID, password.EncryptedPassword, password.Username,
