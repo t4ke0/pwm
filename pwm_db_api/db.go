@@ -308,7 +308,7 @@ WHERE user_id = $1`, userID)
 func (d Db) StoreUserPassword(userID int, password Passwords) error {
 	result, err := d.conn.Exec(
 		`INSERT INTO passwords(user_id, password, username, category, site)
- 			VALUES($1, $2, $3, $4)`, userID, password.EncryptedPassword, password.Username,
+ 			VALUES($1, $2, $3, $4, $5)`, userID, password.EncryptedPassword, password.Username,
 		password.Category, password.Site)
 
 	if err != nil {
