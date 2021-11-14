@@ -362,3 +362,10 @@ func (d Db) UpdateUserPassword(userID, passwordID int, itemsToUpdate map[Element
 	}
 	return nil
 }
+
+// DeletePassword
+func (d Db) DeletePassword(userID, passwordID int) (err error) {
+	_, err = d.conn.Exec(`DELETE FROM passwords where id = $1 AND user_id = $2`,
+		passwordID, userID)
+	return
+}
