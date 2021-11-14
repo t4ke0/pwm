@@ -7,9 +7,9 @@ require (
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.7.2
 	github.com/google/uuid v1.1.2
-	github.com/lib/pq v1.10.3 // indirect
+	github.com/lib/pq v1.10.4 // indirect
 	github.com/t4ke0/pwm/keys_manager v0.0.0-20210829112956-35b837e2af15
-	github.com/t4ke0/pwm/pwm_db_api v0.0.0-20211106194715-11a17296ee6d
+	github.com/t4ke0/pwm/pwm_db_api v0.0.0-20211114113044-f3aa30790965
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	google.golang.org/grpc v1.39.0
 )
