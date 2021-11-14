@@ -226,6 +226,24 @@ func (ms *managerServer) GeneratePassword(ctx context.Context, req *pb.GenerateP
 	}, nil
 }
 
+// DeletePassword delete a particular password.
+func (ms *managerServer) DeletePassword(ctx context.Context, req *pb.DeletePasswordRequest) (*pb.Empty, error) {
+	conn, err := db.New(postgresURL)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	claims, err := getTokenInfo(req.JwtToken)
+	if err != nil {
+		return nil, err
+	}
+	if err := conn.DeletePassword(claims.UserID, int(req.PasswordID)); err != nil {
+		return nil, err
+	}
+	return nil, nil
+}
+
 const serviceAddress = ":8989"
 
 func main() {
