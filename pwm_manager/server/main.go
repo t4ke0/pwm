@@ -116,7 +116,11 @@ func (ms *managerServer) StorePassword(ctx context.Context, req *pb.ManagerReque
 	}
 
 	userKey := claims.SymmetricKey
-	encryptedPassword, err := passwords.EncryptPassword([]byte(userKey), []byte(req.Password.ClearTextPassword))
+	userKeyByte, err := hex.DecodeString(userKey)
+	if err != nil {
+		return nil, err
+	}
+	encryptedPassword, err := passwords.EncryptPassword(userKeyByte, []byte(req.Password.ClearTextPassword))
 	if err != nil {
 		return nil, err
 	}
