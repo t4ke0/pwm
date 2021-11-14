@@ -3,14 +3,14 @@ module github.com/t4ke0/pwm/pwm_manager
 go 1.17
 
 require (
-	github.com/t4ke0/pwm/pwm_db_api v0.0.0-20211106194715-11a17296ee6d
+	github.com/t4ke0/pwm/pwm_db_api v0.0.0-20211114113044-f3aa30790965
 	google.golang.org/grpc v1.41.0
 	google.golang.org/protobuf v1.27.1
 )
 
 require (
 	github.com/golang/protobuf v1.5.0 // indirect
-	github.com/lib/pq v1.10.3 // indirect
+	github.com/lib/pq v1.10.4 // indirect
 	golang.org/x/net v0.0.0-20200822124328-c89045814202 // indirect
 	golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd // indirect
 	golang.org/x/text v0.3.0 // indirect
