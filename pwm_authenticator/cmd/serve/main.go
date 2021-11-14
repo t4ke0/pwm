@@ -48,14 +48,6 @@ func init() {
 		if err != nil {
 			log.Fatalf("couldn't setup testing database %v", err)
 		}
-		// TODO: fix this
-		//		conn, err := db.New(testpostgresURL)
-		//		if err != nil {
-		//			log.Fatalf("couldn't dial postgres database %v", err)
-		//		}
-		//		if err := conn.ClearTestTables(); err != nil {
-		//			log.Fatalf("couldn't clear test tables %v", err)
-		//		}
 		postgresLink = testpostgresURL
 	}
 
@@ -259,6 +251,7 @@ func setupGinEngine() {
 		return
 	})
 
+	// TODO: add Authorization token for `/info` endpoint.
 	engine.GET("/info", func(c *gin.Context) {
 		tokenString := c.GetHeader(headerTokenKey)
 		if tokenString == "" {
