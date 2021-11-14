@@ -21,6 +21,7 @@ type ManagerClient interface {
 	StorePassword(ctx context.Context, in *ManagerRequest, opts ...grpc.CallOption) (*Empty, error)
 	UpdatePassword(ctx context.Context, in *ManagerUpdateRequest, opts ...grpc.CallOption) (*Empty, error)
 	GetPasswords(ctx context.Context, in *GetPasswordsRequest, opts ...grpc.CallOption) (*UserPasswords, error)
+	DeletePasswords(ctx context.Context, in *DeletePasswordRequest, opts ...grpc.CallOption) (*Empty, error)
 	GeneratePassword(ctx context.Context, in *GeneratePasswordRequest, opts ...grpc.CallOption) (*GeneratedPassword, error)
 }
 
@@ -59,6 +60,15 @@ func (c *managerClient) GetPasswords(ctx context.Context, in *GetPasswordsReques
 	return out, nil
 }
 
+func (c *managerClient) DeletePasswords(ctx context.Context, in *DeletePasswordRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/proto.Manager/DeletePasswords", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *managerClient) GeneratePassword(ctx context.Context, in *GeneratePasswordRequest, opts ...grpc.CallOption) (*GeneratedPassword, error) {
 	out := new(GeneratedPassword)
 	err := c.cc.Invoke(ctx, "/proto.Manager/GeneratePassword", in, out, opts...)
@@ -75,6 +85,7 @@ type ManagerServer interface {
 	StorePassword(context.Context, *ManagerRequest) (*Empty, error)
 	UpdatePassword(context.Context, *ManagerUpdateRequest) (*Empty, error)
 	GetPasswords(context.Context, *GetPasswordsRequest) (*UserPasswords, error)
+	DeletePasswords(context.Context, *DeletePasswordRequest) (*Empty, error)
 	GeneratePassword(context.Context, *GeneratePasswordRequest) (*GeneratedPassword, error)
 	mustEmbedUnimplementedManagerServer()
 }
@@ -91,6 +102,9 @@ func (UnimplementedManagerServer) UpdatePassword(context.Context, *ManagerUpdate
 }
 func (UnimplementedManagerServer) GetPasswords(context.Context, *GetPasswordsRequest) (*UserPasswords, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPasswords not implemented")
+}
+func (UnimplementedManagerServer) DeletePasswords(context.Context, *DeletePasswordRequest) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeletePasswords not implemented")
 }
 func (UnimplementedManagerServer) GeneratePassword(context.Context, *GeneratePasswordRequest) (*GeneratedPassword, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GeneratePassword not implemented")
@@ -162,6 +176,24 @@ func _Manager_GetPasswords_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Manager_DeletePasswords_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeletePasswordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ManagerServer).DeletePasswords(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Manager/DeletePasswords",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ManagerServer).DeletePasswords(ctx, req.(*DeletePasswordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Manager_GeneratePassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GeneratePasswordRequest)
 	if err := dec(in); err != nil {
@@ -198,6 +230,10 @@ var Manager_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetPasswords",
 			Handler:    _Manager_GetPasswords_Handler,
+		},
+		{
+			MethodName: "DeletePasswords",
+			Handler:    _Manager_DeletePasswords_Handler,
 		},
 		{
 			MethodName: "GeneratePassword",

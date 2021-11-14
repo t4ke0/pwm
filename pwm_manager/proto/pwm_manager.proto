@@ -9,6 +9,7 @@ service Manager {
     rpc StorePassword(ManagerRequest) returns (Empty) ;
     rpc UpdatePassword(ManagerUpdateRequest) returns (Empty);
     rpc GetPasswords(GetPasswordsRequest) returns (UserPasswords);
+    rpc DeletePasswords(DeletePasswordRequest) returns (Empty);
     rpc GeneratePassword(GeneratePasswordRequest) returns (GeneratedPassword);
 }
 
@@ -67,4 +68,9 @@ message UserPasswords {
 
 message GetPasswordsRequest {
     string JwtToken = 1;
+}
+
+message DeletePasswordRequest {
+    string JwtToken   = 1;
+    int64  PasswordID = 2;
 }
