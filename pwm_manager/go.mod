@@ -3,7 +3,7 @@ module github.com/t4ke0/pwm/pwm_manager
 go 1.17
 
 require (
-	github.com/t4ke0/pwm/pwm_db_api v0.0.0-20211114113044-f3aa30790965
+	github.com/t4ke0/pwm/pwm_db_api v0.0.0-20211114161425-6032255503d5
 	google.golang.org/grpc v1.41.0
 	google.golang.org/protobuf v1.27.1
 )
