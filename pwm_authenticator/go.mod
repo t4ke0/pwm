@@ -9,7 +9,7 @@ require (
 	github.com/google/uuid v1.1.2
 	github.com/lib/pq v1.10.4 // indirect
 	github.com/t4ke0/pwm/keys_manager v0.0.0-20210829112956-35b837e2af15
-	github.com/t4ke0/pwm/pwm_db_api v0.0.0-20211114113044-f3aa30790965
+	github.com/t4ke0/pwm/pwm_db_api v0.0.0-20211114161425-6032255503d5
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	google.golang.org/grpc v1.39.0
 )
