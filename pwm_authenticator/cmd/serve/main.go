@@ -8,13 +8,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 
 	keys_manager_pb "github.com/t4ke0/pwm/keys_manager/proto"
 
+	http_toolkit "github.com/t4ke0/pwm/pkg/common/http"
 	"github.com/t4ke0/pwm/pwm_authenticator/api"
 	"github.com/t4ke0/pwm/pwm_authenticator/passwords"
 	db "github.com/t4ke0/pwm/pwm_db_api"
@@ -37,9 +37,9 @@ var (
 )
 
 func dialKeysManager() (*grpc.ClientConn, error) {
-	log.Printf("DEBUG keys manger hostname %v:%v", keysManagerHost, keysManagerPort)
+	log.Printf("DEBUG keys manger hostname %v", keysManagerHost)
 	opts := []grpc.DialOption{grpc.WithInsecure()}
-	return grpc.Dial(fmt.Sprintf("%v:%v", keysManagerHost, keysManagerPort), opts...)
+	return grpc.Dial(fmt.Sprintf("%v", keysManagerHost), opts...)
 }
 
 func init() {
@@ -96,207 +96,211 @@ func setupGinEngine() {
 	const headerTokenKey string = "token"
 
 	// TODO: add /restore/password endpoint.
-
 	engine = gin.Default()
-	engine.Use(cors.Default())
-	engine.POST("/login", func(c *gin.Context) {
-		var req api.AuthRequest
-		defer handleError(c)
-		if err := c.BindJSON(&req); err != nil {
-			panic(err)
-		}
-		if req.Username.IsEmpty() || req.Password.IsEmpty() {
-			c.Status(http.StatusBadRequest)
-			return
-		}
-		conn, err := db.New(postgresLink)
-		if err != nil {
-			panic(err)
-		}
-		defer conn.Close()
+	engine.Use(http_toolkit.CorsMiddleware())
 
-		info, err := conn.GetUserAuthInfo(req.Username.String())
-		if err != nil && err == db.ErrNoRows {
-			c.Status(http.StatusUnauthorized)
-			return
-		}
-		if err != nil {
-			panic(err)
-		}
+	r := http_toolkit.GetBasePATHroute(engine)
 
-		storedPassword := passwords.ToHashedPassword(info.Password)
-		valid := storedPassword.IsCorrectPassword(req.Password.Byte())
-		if !valid {
-			c.Status(http.StatusUnauthorized)
-			return
-		}
-		sessionID := uuid.New().String()
+	{
+		r.POST("/login", func(c *gin.Context) {
+			var req api.AuthRequest
+			defer handleError(c)
+			if err := c.BindJSON(&req); err != nil {
+				panic(err)
+			}
+			if req.Username.IsEmpty() || req.Password.IsEmpty() {
+				c.Status(http.StatusBadRequest)
+				return
+			}
+			conn, err := db.New(postgresLink)
+			if err != nil {
+				panic(err)
+			}
+			defer conn.Close()
 
-		grpcConn, err := dialKeysManager()
-		if err != nil {
-			panic(err)
-		}
-		defer grpcConn.Close()
+			info, err := conn.GetUserAuthInfo(req.Username.String())
+			if err != nil && err == db.ErrNoRows {
+				c.Status(http.StatusUnauthorized)
+				return
+			}
+			if err != nil {
+				panic(err)
+			}
 
-		keysManagerClient := keys_manager_pb.NewKeyManagerClient(grpcConn)
-		userKey, err := keysManagerClient.GetUserKey(context.TODO(), &keys_manager_pb.KeyFetchRequest{Username: req.Username.String()})
-		if err != nil {
-			panic(err)
-		}
+			storedPassword := passwords.ToHashedPassword(info.Password)
+			valid := storedPassword.IsCorrectPassword(req.Password.Byte())
+			if !valid {
+				c.Status(http.StatusUnauthorized)
+				return
+			}
+			sessionID := uuid.New().String()
 
-		authServerKey, err := conn.GetAuthServerKey()
-		if err != nil {
-			panic(err)
-		}
+			grpcConn, err := dialKeysManager()
+			if err != nil {
+				panic(err)
+			}
+			defer grpcConn.Close()
 
-		if authServerKey == "" {
-			panic(fmt.Errorf("no auth server key in the database"))
-		}
+			keysManagerClient := keys_manager_pb.NewKeyManagerClient(grpcConn)
+			userKey, err := keysManagerClient.GetUserKey(context.TODO(), &keys_manager_pb.KeyFetchRequest{Username: req.Username.String()})
+			if err != nil {
+				panic(err)
+			}
 
-		jwtToken, err := getNewJWTtoken([]byte(authServerKey), tokenClaims{
-			UserID:       info.ID,
-			Username:     req.Username.String(),
-			SessionID:    sessionID,
-			SymmetricKey: userKey.Key,
+			authServerKey, err := conn.GetAuthServerKey()
+			if err != nil {
+				panic(err)
+			}
+
+			if authServerKey == "" {
+				panic(fmt.Errorf("no auth server key in the database"))
+			}
+
+			jwtToken, err := getNewJWTtoken([]byte(authServerKey), tokenClaims{
+				UserID:       info.ID,
+				Username:     req.Username.String(),
+				SessionID:    sessionID,
+				SymmetricKey: userKey.Key,
+			})
+			if err != nil {
+				panic(err)
+			}
+
+			if err := conn.InsertNewSession(sessionID, jwtToken, info.ID, time.Now()); err != nil {
+				panic(err)
+			}
+
+			c.JSON(http.StatusOK, api.AuthResponse{jwtToken})
 		})
-		if err != nil {
-			panic(err)
-		}
 
-		if err := conn.InsertNewSession(sessionID, jwtToken, info.ID, time.Now()); err != nil {
-			panic(err)
-		}
+		r.POST("/register", func(c *gin.Context) {
+			var req api.RegisterRequest
+			if err := c.BindJSON(&req); err != nil {
+				log.Printf("debug error %v", err)
+				c.String(http.StatusInternalServerError, "Error: [%v]", err)
+				return
+			}
+			if req.Email.IsEmpty() || req.Username.IsEmpty() || req.Password.IsEmpty() {
+				c.Status(http.StatusBadRequest)
+				return
+			}
+			log.Printf("debug %v", postgresLink)
+			conn, err := db.New(postgresLink)
+			if err != nil {
+				log.Printf("debug error %v", err)
+				c.String(http.StatusInternalServerError, "PSQL conn: [%v]", err)
+				return
+			}
+			defer conn.Close()
+			ok, err := conn.UserExists(req.Username.String())
+			if err != nil {
+				log.Printf("debug error %v", err)
+				c.String(http.StatusInternalServerError, "Check User existance: [%v]", err)
+				return
+			}
+			if ok {
+				c.String(http.StatusConflict, "username already taken")
+				return
+			}
 
-		c.JSON(http.StatusOK, api.AuthResponse{jwtToken})
-	})
+			emailExists, err := conn.EmailExists(req.Email.String())
+			if err != nil {
+				log.Printf("debug error %v", err)
+				c.String(http.StatusInternalServerError, "Check Email existance [%v]", err)
+				return
+			}
+			if emailExists {
+				c.String(http.StatusConflict, "email already registred")
+				return
+			}
 
-	engine.POST("/register", func(c *gin.Context) {
-		var req api.RegisterRequest
-		if err := c.BindJSON(&req); err != nil {
-			log.Printf("debug error %v", err)
-			c.String(http.StatusInternalServerError, "Error: [%v]", err)
-			return
-		}
-		if req.Email.IsEmpty() || req.Username.IsEmpty() || req.Password.IsEmpty() {
-			c.Status(http.StatusBadRequest)
-			return
-		}
-		log.Printf("debug %v", postgresLink)
-		conn, err := db.New(postgresLink)
-		if err != nil {
-			log.Printf("debug error %v", err)
-			c.String(http.StatusInternalServerError, "PSQL conn: [%v]", err)
-			return
-		}
-		defer conn.Close()
-		ok, err := conn.UserExists(req.Username.String())
-		if err != nil {
-			log.Printf("debug error %v", err)
-			c.String(http.StatusInternalServerError, "Check User existance: [%v]", err)
-			return
-		}
-		if ok {
-			c.String(http.StatusConflict, "username already taken")
-			return
-		}
+			// Generate an encryption key for the user.
+			clientConn, err := dialKeysManager()
+			if err != nil {
+				log.Printf("debug error %v", err)
+				c.String(http.StatusInternalServerError, "GRPC [error] (%v)", err)
+				return
+			}
+			defer clientConn.Close()
 
-		emailExists, err := conn.EmailExists(req.Email.String())
-		if err != nil {
-			log.Printf("debug error %v", err)
-			c.String(http.StatusInternalServerError, "Check Email existance [%v]", err)
+			keyManagerClient := keys_manager_pb.NewKeyManagerClient(clientConn)
+			userKey, err := keyManagerClient.GenKey(
+				context.TODO(), &keys_manager_pb.KeyGenRequest{
+					Mode: keys_manager_pb.Mode_User,
+				})
+			if err != nil {
+				log.Printf("debug error %v", err)
+				c.String(http.StatusInternalServerError, "GRPC [error] (%v)", err)
+				return
+			}
+			hashedPassword, err := passwords.Hash([]byte(req.Password))
+			if err != nil {
+				c.String(http.StatusInternalServerError, "hash user pw (%v)", err)
+				return
+			}
+			regConf := db.RegistrationConfig{
+				Username: req.Username.String(),
+				Password: hashedPassword.String(),
+				Email:    req.Email.String(),
+				Key:      userKey.Key,
+			}
+			if err := conn.InsertNewUser(regConf); err != nil {
+				c.String(http.StatusInternalServerError, "Store User (%v)", err)
+				return
+			}
+			c.Status(http.StatusCreated)
+			// TODO: in the future we can introduce an email service that sends an
+			// email verification to the users
 			return
-		}
-		if emailExists {
-			c.String(http.StatusConflict, "email already registred")
-			return
-		}
+		})
 
-		// Generate an encryption key for the user.
-		clientConn, err := dialKeysManager()
-		if err != nil {
-			log.Printf("debug error %v", err)
-			c.String(http.StatusInternalServerError, "GRPC [error] (%v)", err)
-			return
-		}
-		defer clientConn.Close()
+		// TODO: add Authorization token for `/info` endpoint.
+		r.GET("/info", func(c *gin.Context) {
+			tokenString := c.GetHeader(headerTokenKey)
+			if tokenString == "" {
+				c.Status(http.StatusBadRequest)
+				return
+			}
 
-		keyManagerClient := keys_manager_pb.NewKeyManagerClient(clientConn)
-		userKey, err := keyManagerClient.GenKey(
-			context.TODO(), &keys_manager_pb.KeyGenRequest{
-				Mode: keys_manager_pb.Mode_User,
-			})
-		if err != nil {
-			log.Printf("debug error %v", err)
-			c.String(http.StatusInternalServerError, "GRPC [error] (%v)", err)
-			return
-		}
-		hashedPassword, err := passwords.Hash([]byte(req.Password))
-		if err != nil {
-			c.String(http.StatusInternalServerError, "hash user pw (%v)", err)
-			return
-		}
-		regConf := db.RegistrationConfig{
-			Username: req.Username.String(),
-			Password: hashedPassword.String(),
-			Email:    req.Email.String(),
-			Key:      userKey.Key,
-		}
-		if err := conn.InsertNewUser(regConf); err != nil {
-			c.String(http.StatusInternalServerError, "Store User (%v)", err)
-			return
-		}
-		c.Status(http.StatusCreated)
-		// TODO: in the future we can introduce an email service that sends an
-		// email verification to the users
-		return
-	})
+			defer handleError(c)
+			conn, err := db.New(postgresLink)
+			if err != nil {
+				panic(err)
+			}
+			defer conn.Close()
+			authKey, err := conn.GetAuthServerKey()
+			if err != nil {
+				panic(err)
+			}
+			if authKey == "" {
+				panic(fmt.Errorf("auth key not present in the database"))
+			}
+			tokenclaims, err := parseJWTtoken(tokenString, []byte(authKey))
+			if err != nil {
+				panic(err)
+			}
 
-	// TODO: add Authorization token for `/info` endpoint.
-	engine.GET("/info", func(c *gin.Context) {
-		tokenString := c.GetHeader(headerTokenKey)
-		if tokenString == "" {
-			c.Status(http.StatusBadRequest)
-			return
-		}
+			c.JSON(http.StatusOK, tokenclaims)
+		})
 
-		defer handleError(c)
-		conn, err := db.New(postgresLink)
-		if err != nil {
-			panic(err)
-		}
-		defer conn.Close()
-		authKey, err := conn.GetAuthServerKey()
-		if err != nil {
-			panic(err)
-		}
-		if authKey == "" {
-			panic(fmt.Errorf("auth key not present in the database"))
-		}
-		tokenclaims, err := parseJWTtoken(tokenString, []byte(authKey))
-		if err != nil {
-			panic(err)
-		}
-
-		c.JSON(http.StatusOK, tokenclaims)
-	})
-
-	engine.POST("/logout", func(c *gin.Context) {
-		tokenAsStr := c.GetHeader(headerTokenKey)
-		conn, err := db.New(postgresLink)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": err.Error(),
-			})
-			return
-		}
-		defer conn.Close()
-		if err := conn.RevokeSession(tokenAsStr); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": err.Error(),
-			})
-			return
-		}
-	})
+		r.POST("/logout", func(c *gin.Context) {
+			tokenAsStr := c.GetHeader(headerTokenKey)
+			conn, err := db.New(postgresLink)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"error": err.Error(),
+				})
+				return
+			}
+			defer conn.Close()
+			if err := conn.RevokeSession(tokenAsStr); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"error": err.Error(),
+				})
+				return
+			}
+		})
+	}
 
 }
 
