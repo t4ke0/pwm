@@ -190,7 +190,7 @@ func (ms *managerServer) UpdatePassword(ctx context.Context, req *pb.ManagerUpda
 }
 
 func getTokenInfo(jwtToken string) (api.TokenClaims, error) {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/info", authenticatorAddress), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/info", authenticatorAddress), nil)
 	if err != nil {
 		return api.TokenClaims{}, err
 	}
