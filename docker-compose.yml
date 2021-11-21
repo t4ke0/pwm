@@ -60,13 +60,25 @@ services:
       - POSTGRES_HOST=db
       - POSTGRES_PASSWORD=$db_password
       - WORDS_FILENAME=/opt/bin/words.txt
-      - AUTHENTICATOR_ADDRESS=pwm_authenticator:8080
+      - AUTHENTICATOR_ADDRESS=http://pwm_authenticator:8080
     build: ./pwm_manager/.
     ports: ["8989:8989"]
     networks: ["custom-net"]
     depends_on:
     - db
     - pwm_authenticator
+
+  gateway:
+    environment:
+      - PWM_MANAGER_HOSTNAME=pwm_manager:8989
+    build: 
+      context: ./gateway/
+      dockerfile: ./build/Dockerfile
+    ports: ["6969:6969"]
+    networks: ["custom-net"]
+    depends_on:
+    - db
+    - pwm_manager
 
 volumes:
   pwm-db-volume: {}
