@@ -30,8 +30,7 @@ services:
       - POSTGRES_PASSWORD=$db_password
       - POSTGRES_HOST=db
       - POSTGRES_DATABASE=postgres
-      - KEYS_MANAGER_HOST=key-manager
-      - KEYS_MANAGER_PORT=9090
+      - KEYS_MANAGER_HOST=key-manager:9090
       - LOCAL_TEST=$LOCAL_TEST
     build: ./pwm_authenticator/.
     ports:
