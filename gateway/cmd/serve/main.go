@@ -46,13 +46,8 @@ func handleEndpointError(c *gin.Context) {
 
 func authorize() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var token struct {
-			JwtToken string `json:"jwt_token"`
-		}
-		if err := c.BindJSON(&token); err != nil {
-			c.AbortWithStatus(http.StatusBadRequest)
-		}
-		if token.JwtToken == "" {
+		token := c.GetHeader("token")
+		if token == "" {
 			c.AbortWithStatus(http.StatusUnauthorized)
 		}
 		c.Next()
@@ -69,11 +64,7 @@ func main() {
 
 	{
 		r.GET("/list/passwords", func(c *gin.Context) {
-			var req api.ListPasswordRequest
-			if err := c.BindJSON(&req); err != nil {
-				c.Status(http.StatusBadRequest)
-				return
-			}
+			jwtToken := c.GetHeader("token")
 
 			defer handleEndpointError(c)
 			grpcConnection, err := dialPWMmanager()
@@ -89,7 +80,7 @@ func main() {
 			ctx, cancel := context.WithTimeout(context.TODO(), time.Second*10)
 			defer cancel()
 			userPasswords, err := client.GetPasswords(ctx, &pwm_manager_pb.GetPasswordsRequest{
-				JwtToken: req.JWTtoken,
+				JwtToken: jwtToken,
 			})
 			if err != nil {
 				panic(err)
@@ -108,6 +99,7 @@ func main() {
 		})
 
 		r.POST("/add/password", func(c *gin.Context) {
+			token := c.GetHeader("token")
 			var req api.StorePasswordRequest
 			if err := c.BindJSON(&req); err != nil {
 				c.Status(http.StatusBadRequest)
@@ -127,7 +119,7 @@ func main() {
 			ctx, cancel := context.WithTimeout(context.TODO(), time.Second*10)
 			defer cancel()
 			_, err = client.StorePassword(ctx, &pwm_manager_pb.ManagerRequest{
-				JwtToken: req.JWTtoken,
+				JwtToken: token,
 				Password: &pwm_manager_pb.PasswordData{
 					ClearTextPassword: req.PlainTextPassword,
 					Username:          req.Username,
@@ -146,6 +138,7 @@ func main() {
 		})
 
 		r.PATCH("/update/password", func(c *gin.Context) {
+			token := c.GetHeader("token")
 			var req api.UpdateUserItemsRequest
 			if err := c.BindJSON(&req); err != nil {
 				c.Status(http.StatusBadRequest)
@@ -179,7 +172,7 @@ func main() {
 			}
 
 			if _, err := client.UpdatePassword(ctx, &pwm_manager_pb.ManagerUpdateRequest{
-				JwtToken:   req.JwtToken,
+				JwtToken:   token,
 				PasswordID: int64(req.PasswordID),
 				Mode:       modes,
 				Value:      values,
@@ -191,6 +184,7 @@ func main() {
 		})
 
 		r.DELETE("/delete/password", func(c *gin.Context) {
+			token := c.GetHeader("token")
 			var req api.DeleteUserCredRequest
 			if err := c.BindJSON(&req); err != nil {
 				c.Status(http.StatusBadRequest)
@@ -214,7 +208,7 @@ func main() {
 			defer cancel()
 
 			_, err = client.DeletePasswords(ctx, &pwm_manager_pb.DeletePasswordRequest{
-				JwtToken:   req.JwtToken,
+				JwtToken:   token,
 				PasswordID: int64(req.PasswordID),
 			})
 

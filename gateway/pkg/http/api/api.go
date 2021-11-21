@@ -1,10 +1,5 @@
 package api
 
-// ListPasswordRequest JSON request to list user passwords.
-type ListPasswordRequest struct {
-	JWTtoken string `json:"jwt_token"`
-}
-
 // ListPasswordResponse JSON response of list user passwords endpoint.
 type ListPasswordResponse struct {
 	PasswordID        int    `json:"password_id"`
@@ -16,8 +11,6 @@ type ListPasswordResponse struct {
 
 // StorePasswordRequest JSON request to store passwords of a user.
 type StorePasswordRequest struct {
-	JWTtoken string `json:"jwt_token"`
-
 	Username          string `json:"username"`
 	PlainTextPassword string `json:"plaintext_password"`
 	Category          string `json:"category"`
@@ -50,8 +43,7 @@ func (self CredItem) Validate() bool {
 // UpdateUserItemsRequest JSON request to update user's creds items such as
 // `password`, `site`, etc ....
 type UpdateUserItemsRequest struct {
-	JwtToken   string `json:"jwt_token"`
-	PasswordID int    `json:"password_id"`
+	PasswordID int `json:"password_id"`
 	Items      []struct {
 		Item  CredItem `json:"item"`
 		Value string   `json:"value"`
@@ -60,8 +52,7 @@ type UpdateUserItemsRequest struct {
 
 // DeleteUserCredRequest
 type DeleteUserCredRequest struct {
-	JwtToken   string `json:"jwt_token"`
-	PasswordID int    `json:"password_id"`
+	PasswordID int `json:"password_id"`
 }
 
 // Complexity
@@ -79,8 +70,6 @@ func (c Complexity) String() string {
 
 // GeneratePasswordRequest
 type GeneratePasswordRequest struct {
-	JwtToken string `json:"jwt_token"`
-
 	PasswordLength     int64      `json:"password_length"`
 	PasswordComplexity Complexity `json:"password_complexity"`
 }
