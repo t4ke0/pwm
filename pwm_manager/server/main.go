@@ -139,7 +139,7 @@ func (ms *managerServer) StorePassword(ctx context.Context, req *pb.ManagerReque
 	}); err != nil {
 		return nil, err
 	}
-	return nil, nil
+	return &pb.Empty{}, nil
 }
 
 // UpdatePassword update user credentials `username, password, etc ....`
