@@ -3,7 +3,7 @@ module github.com/t4ke0/pwm/gateway
 go 1.17
 
 require (
-	github.com/gin-gonic/gin v1.7.4
+	github.com/gin-gonic/gin v1.7.7
 	github.com/t4ke0/pwm/pkg/common/http v0.0.0-20211121115712-d3d7c78c287f
 	github.com/t4ke0/pwm/pwm_manager v0.0.0-20211114142207-74660f73bb4f
 	google.golang.org/grpc v1.42.0
