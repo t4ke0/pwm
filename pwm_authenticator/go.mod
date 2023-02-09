@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1
-	github.com/gin-gonic/gin v1.7.4
+	github.com/gin-gonic/gin v1.7.7
 	github.com/google/uuid v1.1.2
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/lib/pq v1.10.4 // indirect
