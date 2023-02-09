@@ -2,7 +2,7 @@ module github.com/t4ke0/pwm/pkg/common/http
 
 go 1.17
 
-require github.com/gin-gonic/gin v1.7.4
+require github.com/gin-gonic/gin v1.7.7
 
 require (
 	github.com/gin-contrib/sse v0.1.0 // indirect
